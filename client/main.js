@@ -1,32 +1,16 @@
 
 //ROUTER
-CORE.register('router', function(sb) {
-	var self 	 = this,
-		pathname = location.pathname,
+CORE.register('router/pathTree/cacher', function(sb) {
+	var pathTree,
+		pathname = location.pathname;
 
-		pathTree;
-	
-	function req_getBody() {
-		var pathList
-		if (pathname !== "/")
-			pathList = pathTree
-		else
-			pathList = ["home"]
 
-		sb.dispatch({
-			type: 'req/get_body',
-			data: pathList
-		})
-	}
-		
 	return {
-		init : function() {
+		init: function() {
 			pathTree = this.getPathTree()
-			req_getBody()
-			this.listenPathTree()
 		},
-		destroy : function() {
-			sb.mute(['router/path_req'])
+		destroy: function() {
+
 		},
 		getPathTree : function() {
 			pathTree = pathname.split('/');
@@ -35,24 +19,60 @@ CORE.register('router', function(sb) {
 			if (pathTree[pathTree.length-1] == "") // if location had a trailing "/"
 				pathTree.pop(); 
 
+			this.cachePathTree();
+
 			return pathTree
 		},
-		listenPathTree : function() {
-			sb.listen({
-				"router/path_req": this.dispatchPathTree
+		cachePathTree : function() {
+			sb.cacher({
+				name : 'pathTree',
+				data : pathTree
 			})
-		},
-		dispatchPathTree : function() {
+
 			sb.dispatch({
-				type: "router/path_res",
-				data: pathTree
+				type: 'router/pathTree/cached',
+				data: null
 			})
 		}
 	}
 })
 
-CORE.start('init:body-loader')
+CORE.register('router', function(sb) {
+	var self 	 = this,
+		pathname = location.pathname,
+		pathTree;
+
+		
+	return {
+		init : function() {
+			sb.listen({
+				"router/pathTree/cached" : this.pathCatalyst
+			})
+		},
+		destroy : function() {
+			sb.mute(['router/path/req'])
+		},
+		pathCatalyst : function() {
+			var pathList;
+			pathTree = sb.cache.pathTree
+
+			if (pathname !== "/")
+				pathList = pathTree
+			else
+				pathList = ["home"]
+
+			sb.dispatch({
+				type: 'router/path/cached',
+				data: pathList
+			})
+		}
+		
+	}
+})
+
+CORE.start('module:body-loader')
 CORE.start('router');
+CORE.start('router/pathTree/cacher')
 
 
 

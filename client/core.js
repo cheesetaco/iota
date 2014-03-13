@@ -1,6 +1,6 @@
 
 var CORE = (function ($) {
-	var modLib = {}, _dom, _utilities;
+	var modLib = {}, cacheLib = {}, _dom, _utilities;
 
 	_utilities = {
 		is_obj : function (obj) {
@@ -46,6 +46,7 @@ var CORE = (function ($) {
 			if (mod.instance) {
 				mod.instance.destroy()
 				mod.instance = null
+				console.log("stopped: "+moduleID)
 			}
 		},
 		startAll : function() {
@@ -123,35 +124,49 @@ var CORE = (function ($) {
 				}
 			}
 
+		},
+		cache: function(obj) {
+			cacheLib[obj.name] = obj.data
+		},
+		getCacheLib : function() {
+			return cacheLib
 		}
 
 	}
 }(jQuery))
 
 
-var Sandbox =  {
-	build : function (core, module_ID) {
-		//object to return to module on creation through paramater (sandbox) 
-		return {
-			dom : function (selector) {
-				return core.dom(selector)
-			},
-			listen : function(events) {
-				if (core.util.is_obj(events)) 
-				{
-					core.registerEvents(events, module_ID);
-				}
-			},
-			mute: function(events) { //array
+var Sandbox = (function() {
+	return {
+		build : function (core, module_ID) {
+			//object to return to module on creation through paramater (sandbox) 
+			return {
+				dom : function (selector) {
+					return core.dom(selector)
+				},
+				listen : function(events) {
+					if (core.util.is_obj(events)) 
+					{
+						core.registerEvents(events, module_ID);
+					}
+				},
+				mute: function(events) { //array
 
-				if (core.util.is_arr(events))
-				{
-					core.unregisterEvents(events, module_ID)
-				}
-			},
-			dispatch: function(eventObj) {
-				core.triggerEvent(eventObj)
+					if (core.util.is_arr(events))
+					{
+						core.unregisterEvents(events, module_ID)
+					}
+				},
+				dispatch: function(eventObj) {
+					core.triggerEvent(eventObj)
+				},
+				cacher: function(obj) {
+					core.cache(obj)
+				},
+				cache: (function() {
+					return core.getCacheLib()
+				}())
 			}
 		}
 	}
-}
+}())
