@@ -2,21 +2,6 @@
 var CORE = (function ($) {
 	var modLib = {}, _dom, _utilities;
 
-	_dom = {
-		find : function(selector) {
-			return $(selector)
-		},
-		addEvent : function(selector, eventType, callback) {
-			$(selector).on(eventType, function(event) {
-				var triggered = event.target
-				callback($(triggered))
-			})
-		},
-		removeEvent: function(selector, eventType) {
-			$(selector).off(eventType)
-		}
-	}
-
 	_utilities = {
 		is_obj : function (obj) {
 			return $.isPlainObject(obj);         
@@ -29,10 +14,9 @@ var CORE = (function ($) {
 
 	//methods inside CORE object
 	return {
-		myQuery : function(selector) {
-			return myQuery(selector)
+		dom : function(selector) {
+			return dom(selector)
 		},
-		dom : _dom,
 
 		util : _utilities,
 
@@ -149,17 +133,8 @@ var Sandbox =  {
 	build : function (core, module_ID) {
 		//object to return to module on creation through paramater (sandbox) 
 		return {
-			myQuery: function(selector) {
-				return core.myQuery(selector)
-			},
 			dom : function (selector) {
-				return core.dom.find(selector)
-			},
-			addEvent: function(selector, eventType, callback) {
-				core.dom.addEvent(selector, eventType, callback)
-			},
-			removeEvent: function(selector, eventType) {
-				core.dom.removeEvent(selector, eventType)
+				return core.dom(selector)
 			},
 			listen : function(events) {
 				if (core.util.is_obj(events)) 
@@ -167,7 +142,7 @@ var Sandbox =  {
 					core.registerEvents(events, module_ID);
 				}
 			},
-			mute: function(events) {
+			mute: function(events) { //array
 
 				if (core.util.is_arr(events))
 				{

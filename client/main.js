@@ -26,7 +26,7 @@ CORE.register('router', function(sb) {
 			this.listenPathTree()
 		},
 		destroy : function() {
-
+			sb.mute(['router/path_req'])
 		},
 		getPathTree : function() {
 			pathTree = pathname.split('/');
@@ -51,7 +51,9 @@ CORE.register('router', function(sb) {
 	}
 })
 
-CORE.startAll();
+CORE.start('init:body-loader')
+CORE.start('router');
+
 
 
 

@@ -1,4 +1,18 @@
 //Body loader
+CORE.register('init:body-loader', function() {
+	return {
+		init : function() {
+			CORE.start('model_cache')
+			CORE.start('view_get_body')
+			CORE.start('model_get_body')
+		},
+		destroy: function() {
+			CORE.stop('model_cache')
+			CORE.stop('view_get_body')
+			CORE.stop('model_get_body')			
+		}
+	}
+})
 
 //Cache Body
 CORE.register('model_cache', function(sb) {
@@ -45,9 +59,9 @@ CORE.register('view_get_body', function(sb) {
 		})
 	},
 	displayBody = function() {
-		sb.dom('#content').append(blocksArray)
+		$('#content').append(blocksArray)
 
-		$seed = sb.dom('#content block seed');
+		$seed = $('#content block seed');
 
 		chubbs.requestPath()
 

@@ -1,12 +1,12 @@
-var myQuery;
+var dom;
 
 (function() {
 
-	myQuery  = function(selector) {
-		return new MyQuery(selector);
+	dom  = function(selector) {
+		return new Dom(selector);
 	};
 
-	var MyQuery = function(selector) {
+	var Dom = function(selector) {
 		var nodes, nodeArr;
 
 		if (selector.charAt(0) === "#")
@@ -24,11 +24,11 @@ var myQuery;
 		return this;
 	};
 
-	// Expose the prototype object via myQuery.fn so methods can be added later
-	myQuery.fn = MyQuery.prototype = {
+	// Expose the prototype object via dom.fn so methods can be added later
+	Dom.fn = Dom.prototype = {
 		// API Methods
 		on : function(eventType, callback) {
-			//this points to the myQuery instance Object
+			//this points to the dom instance Object
 			for (var i=0 ; i < this.length ; i++)
 			{
 				var event = {
@@ -36,7 +36,7 @@ var myQuery;
 					type : eventType
 				}
 				this[i].addEventListener(eventType, function() {
-					callback(event)
+					callback.call(this, event)
 				})
 			}
 			// on(eventType, function(event) {
@@ -45,7 +45,10 @@ var myQuery;
 			// })
 		},
 		off: function(eventType) {
-			// off(eventType)
+			for (var i=0 ; i , this.length ; i++)
+			{
+				this[i].removeEventListener(eventType)
+			}
 		},
 		attr: function(attribute) {
 			console.log(this)
