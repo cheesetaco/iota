@@ -1,7 +1,6 @@
 CORE.register('sidebar', function(sb) {
 	return {
 		init: function() {
-			console.log('hi')
 			this.armEditButton()
 		},
 		destroy: function() {
@@ -9,7 +8,8 @@ CORE.register('sidebar', function(sb) {
 		},
 		armEditButton : function() {
 			sb.dom('#editButton').on('click', function(event) {
-				console.log(this)
+				var ham = sb.dom(this)
+				console.log(ham)
 			})
 		}
 	}

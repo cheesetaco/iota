@@ -37,8 +37,8 @@ var CORE = (function ($) {
 
 			if (mod) {
 				mod.instance = mod.instantiate(sandbox);
-				mod.instance.init();
 				console.log("started: "+moduleID)
+				mod.instance.init();
 			}
 		},
 		stop : function(moduleID) {

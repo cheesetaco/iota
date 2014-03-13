@@ -7,25 +7,52 @@ var dom;
 	};
 
 	var Dom = function(selector) {
-		var nodes, nodeArr;
+		var err = ["failure: no match", "failure: selector must be string or dom object"],
+			pushNodes = function() {
+				if (nodes.length == 0)
+					throw err[0]
+				else {			
+					for (var i = 0; i < nodes.length; i++) {
+						this[i] = nodes[i];
+					}
+					this.length = nodes.length;
+				}
+				return this;
+			},
+		
+		nodes, nodeArr, type;
 
-		if (selector.charAt(0) === "#")
-			nodes = [document.getElementById(selector.substring(1))]
-		else if (selector.charAt(0) === ".")
-			nodes = document.getElementsByClassName(selector.substring(1))
-		else
-			nodes = document.getElementsByTagName(selector);
+		if (typeof selector === "string")
+			type = "string"
+		else if (selector instanceof HTMLElement)
+			type = "element"
+		else if (typeof selector === "object")
+			type = "object"
 
-		for (var i = 0; i < nodes.length; i++) {
-			this[i] = nodes[i];
+		//stage and return new dom object or return selector
+		if (type == "string")
+		{
+			if (selector.charAt(0) === "#")
+				nodes = [document.getElementById(selector.substring(1))]
+			else if (selector.charAt(0) === ".")
+				nodes = document.getElementsByClassName(selector.substring(1))
+			else
+				nodes = document.getElementsByTagName(selector);
+			pushNodes.call(this)
 		}
-		this.length = nodes.length;
-
-		return this;
+		else if (type == "element")
+		{
+			nodes = [selector]
+			pushNodes.call(this)	
+		}
+		else if (type == "object" && selector instanceof Dom)
+			return selector	
+		else
+			return selector		
 	};
 
 	// Expose the prototype object via dom.fn so methods can be added later
-	Dom.fn = Dom.prototype = {
+	dom.fn = Dom.prototype = {
 		// API Methods
 		on : function(eventType, callback) {
 			//this points to the dom instance Object
@@ -39,10 +66,7 @@ var dom;
 					callback.call(this, event)
 				})
 			}
-			// on(eventType, function(event) {
-			// 	var triggered = event.target
-			// 	callback($(triggered))
-			// })
+
 		},
 		off: function(eventType) {
 			for (var i=0 ; i , this.length ; i++)
