@@ -1,0 +1,97 @@
+<head>
+
+<style>
+
+* {
+	padding	:0;
+	margin 	:0;
+	line-height	: 1.7; 
+	vertical-align: baseline;
+	font-family	: 'Open Sans', helvetica; 
+	font-size	: 15px;
+	color 		: rgb(105,105,100);
+}
+seed {
+	color: #FF4719;
+}
+seed:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+block {
+	display	: block;
+	margin-bottom : 5px;
+}
+
+div#content {
+	position	: absolute; 
+	left		: 25%; 
+	width		: 50%; 
+	margin-top	: 3em;
+	display: inline-block;
+}
+div#edit {
+	position:absolute;
+	width: 20%;
+	left:75%;
+	top:1em;
+}
+div#editButton {
+	float:left;
+	width:30%;
+	height: 30px; 
+	background-color: gray;
+}
+div#commitChanges {
+	float:left;
+	width:40%;
+	height: 30px;
+	background-color: lime;
+}
+div#test {
+	float:left;
+	width:30%;
+	height: 30px;
+	background-color: tomato;
+}
+[contenteditable="true"]:active,
+[contenteditable="true"]:focus {
+	border: none;
+	outline: none;
+}
+div#four0four {
+	font-size: 48px;
+}
+</style>
+</head>
+
+
+<!-- <script data-main="http://localhost:8080/client/main.js" src="http://localhost:8080/lib/require.js"></script>
+ -->
+<div id="content">
+<!-- content dynamically loaded here based on url and ajax requests-->
+</div>
+<div class="moop"></div>
+<div id="edit">
+	<div id="editButton" toggle="off">edit</div>
+	<div id="commitChanges">Commit</div>
+	<div id="test"> test </div>
+</div>
+
+<script src="http://localhost:8080/lib/jquery.js"></script>
+<script src="http://localhost:8080/client/base.js"></script>
+<script src='http://localhost:8080/client/core.js'></script>
+<script src='http://localhost:8080/client/body-loader.js'></script>
+<script src='http://localhost:8080/client/main.js'></script>
+
+
+
+
+
+
+
+
+
+
+
+
