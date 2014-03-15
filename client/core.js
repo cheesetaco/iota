@@ -1,3 +1,4 @@
+"use strict"
 
 var CORE = (function ($) {
 	var modLib = {}, cacheLib = {}, _dom, _utilities;
