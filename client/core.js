@@ -108,8 +108,13 @@ var CORE = (function ($) {
 			}
 		},
 		triggerEvent: function(eventObj) {
-			var event = eventObj.type,
-				mod;
+			var event, mod;
+
+			if (typeof eventObj === "object") 
+				event = eventObj.type;
+			else if (typeof eventObj === "string") //adjust variables if eventObj is a string :: has no data
+				event = eventObj
+
 				
 			for (mod in modLib)
 			{
@@ -150,7 +155,7 @@ var Sandbox = (function() {
 						core.registerEvents(events, module_ID);
 					}
 				},
-				mute: function(events) { //array
+				ignore: function(events) { //array
 
 					if (core.util.is_arr(events))
 					{

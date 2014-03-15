@@ -2,25 +2,25 @@
 CORE.register('module:body-loader', function() {
 	return {
 		init : function() {
-			CORE.start('model/cache')
-			CORE.start('view/seeds/arm')
-			CORE.start('view/display')
-			CORE.start('view/render')
-			CORE.start('model/get')
+			CORE.start('body:model/cache')
+			CORE.start('body:view/seeds/arm')
+			CORE.start('body:view/display')
+			CORE.start('body:view/render')
+			CORE.start('body:model/get')
 		},
 		destroy: function() {
-			CORE.stop('model/cache')
-			CORE.stop('view/seeds/arm')
-			CORE.stop('view/display')
-			CORE.stop('view/render')
-			CORE.stop('model/get')			
+			CORE.stop('body:model/cache')
+			CORE.stop('body:view/seeds/arm')
+			CORE.stop('body:view/display')
+			CORE.stop('body:view/render')
+			CORE.stop('body:model/get')			
 
 		}
 	}
 })
 
 //Cache Body
-CORE.register('model/cache', function(sb) {
+CORE.register('body:model/cache', function(sb) {
 
 	return {
 		init : function() {
@@ -29,7 +29,7 @@ CORE.register('model/cache', function(sb) {
 			})
 		},
 		destroy : function() {
-			sb.mute(['request/body/done'])
+			sb.ignore(['request/body/done'])
 		},
 		cacheResponse_body : function(eventObj) {
 			var response = eventObj.data;
@@ -45,25 +45,28 @@ CORE.register('model/cache', function(sb) {
 
 
 //VIEW
-CORE.register('view/seeds/arm', function(sb) {
+CORE.register('body:view/seeds/arm', function(sb) {
 	var pathTree;
 
 	return {
 		init: function() {
 			sb.listen({
+				'router/pathTree/cached' : this.cachePathTree,
 				'view/displayed': this.armSeeds,
-				'router/pathTree/cached' : this.cachePathTree
+				'view/edit/on' 	: this.disarmSeeds,
+				'view/edit/off' : this.armSeeds
 			})
 		},
 		destroy: function() {
-			sb.mute['view/displayed']
+			this.disarmSeeds()
+			sb.ignore['router/pathTree/cached','view/displayed','view/edit/on','view/edit/off']
 		},
 		cachePathTree: function() {
 			pathTree = sb.cache.pathTree
 		},
 		armSeeds : function() 
 		{
-			var	pathSeed, clicked;
+			var	pathSeed;
 
 			$('seed').on('click', function(event) {
 				pathSeed = $(this).attr('name')
@@ -71,10 +74,13 @@ CORE.register('view/seeds/arm', function(sb) {
 				var newPath = pathTree +"/"+ pathSeed;
 				window.location.pathname = newPath
 			})
+		},
+		disarmSeeds : function() {
+			$('seed').off('click')
 		}
 	}
 })
-CORE.register('view/display', function(sb) {
+CORE.register('body:view/display', function(sb) {
 
 	return {
 		init: function() {
@@ -85,20 +91,17 @@ CORE.register('view/display', function(sb) {
 			$seed = $('#content block seed');
 		},
 		destroy: function() {
-			sb.mute(['view/rendered'])
+			sb.ignore(['view/rendered'])
 		},
 		displayBody : function(evtObj) {
 			var blocksArray = evtObj.data
 			$('#content').append(blocksArray)
 
-			sb.dispatch({
-				type : "view/displayed",
-				data : null
-			})
+			sb.dispatch("view/displayed")
 		}
 	}
 })
-CORE.register('view/render', function(sb) {
+CORE.register('body:view/render', function(sb) {
 	// console.log(sb)
 	var blocksArray = [],
 		$seed, lastClicked;
@@ -111,7 +114,7 @@ CORE.register('view/render', function(sb) {
 			})
 		},
 		destroy : function() {
-			sb.mute(['model/cached'])
+			sb.ignore(['model/cached'])
 		},
 		renderBody : function(evtObj) {
 			var response = evtObj.data,
@@ -136,7 +139,7 @@ CORE.register('view/render', function(sb) {
 
 
 //MODEL
-CORE.register('model/get', function(sb) {
+CORE.register('body:model/get', function(sb) {
 
 	var paths,
 
@@ -163,7 +166,7 @@ CORE.register('model/get', function(sb) {
 			})
 		},
 		destroy: function() {
-			sb.mute(['router/path/cached'])
+			sb.ignore(['router/path/cached'])
 		}
 	}
 })

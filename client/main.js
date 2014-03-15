@@ -1,6 +1,20 @@
 
 //ROUTER
-CORE.register('router/pathTree/cacher', function(sb) {
+CORE.register('module:router', function(sb) {
+
+	return {
+		init: function() {
+			CORE.start('router:pathTree/share');
+			CORE.start('router:pathTree/cacher')
+		},
+		destroy: function() {
+
+		}
+
+	}
+})
+
+CORE.register('router:pathTree/cacher', function(sb) {
 	var pathTree,
 		pathname = location.pathname;
 
@@ -29,15 +43,12 @@ CORE.register('router/pathTree/cacher', function(sb) {
 				data : pathTree
 			})
 
-			sb.dispatch({
-				type: 'router/pathTree/cached',
-				data: null
-			})
+			sb.dispatch('router/pathTree/cached')
 		}
 	}
 })
 
-CORE.register('router', function(sb) {
+CORE.register('router:pathTree/share', function(sb) {
 	var self 	 = this,
 		pathname = location.pathname,
 		pathTree;
@@ -50,7 +61,7 @@ CORE.register('router', function(sb) {
 			})
 		},
 		destroy : function() {
-			sb.mute(['router/path/req'])
+			sb.ignore(['router/path/req'])
 		},
 		pathCatalyst : function() {
 			var pathList;
@@ -71,8 +82,8 @@ CORE.register('router', function(sb) {
 })
 
 CORE.start('module:body-loader')
-CORE.start('router');
-CORE.start('router/pathTree/cacher')
+CORE.start('module:router');
+
 
 
 

@@ -2,7 +2,8 @@
 var http = require('http'),
 	fs = require('fs'),
 	neo4j = require('node-neo4j'),
-	mysql = require('mysql');
+	mysql = require('mysql'),
+	mime = require('mime');
 
 
 //load index.html on all url[GET] requests
@@ -21,43 +22,30 @@ function requestListener(request, response) {
 
 // console.log(this)
 	function routeList() {
-		var location = request.url,
-			// getChildren = new RegExp("/getChildren\\??.*"),
-			getChildren = location.match(/\/\?getChildren\??.*/),
-			commitChanges = location.match(/\/\?commitChanges/),
-			allroutes	= /(.*\/)*/;
+		var location 		= request.url,
+			MIMEtype 		= mime.lookup(location),
+			getChildren 	= location.match(/\/\?getChildren\??.*/),
+			commitChanges 	= location.match(/\/\?commitChanges/);
 
+		
+		if (MIMEtype !== "application/javascript") {
+			console.log("	location 	|	" +location)
+			console.log("	type     	|	" +MIMEtype)
+			console.log("")
+		}
+		
 		if (getChildren)
-		{	console.log("ajax: "+location)
-			
 			action_getChildren()
-		}
 		else if(commitChanges)
-		{	console.log("ajax: "+location)
-
 			action_commitChanges()
-		}
-		else if(fileTest()) //file.js
-		{	//console.log("file: " +request.url);
+		else if(MIMEtype == "application/javascript")
+		{
 			var filePath = "." + location
-			
-			routeToFile(filePath, "text/javascript")
-		}
-		else if(allroutes.test(location)) // all other url requests (location.pathname) - people make these requests directly
-		{	console.log("allroutes: " + location)
-			
-			routeToFile("index.html", "text/html")
+
+			routeToFile(filePath, MIMEtype)
 		}
 		else
-			console.log("something didnt load")
-		
-		function fileTest() {
-			var js = /.*\.js/,
-				css = /.*\.css/;
-			if (js.test(location) || css.test(location))
-				return true
-		}
-
+			routeToFile("index.html", "text/html")
 	}
 
 
@@ -477,7 +465,7 @@ function requestListener(request, response) {
 
 
 	// local-file loader
-	var routeToFile = function(filePath, MIMEtype, callback) {
+	var routeToFile = function(filePath, MIMEtype) {
 		var fileName = filePath;
 		
 		fs.exists(fileName, function(exists) {
@@ -490,7 +478,8 @@ function requestListener(request, response) {
 							var data = buffer.toString("utf8", 0, buffer.length);
 			 	
 							// console.log(data);
-							var MIME = typeof MIMEtype !== 'undefined' ? MIMEtype : 'html';
+							var MIME = typeof MIMEtype !== false||null||undefined ? MIMEtype : 'text/html';
+							
 							//////////// http package //////////////
 							response.writeHead(200, {'Content-Type': MIME}); //fs load the ajax file
 							response.end(data);

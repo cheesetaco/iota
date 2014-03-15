@@ -74,9 +74,48 @@ var dom;
 				this[i].removeEventListener(eventType)
 			}
 		},
-		attr: function(attribute) {
-			console.log(this)
-			// return this.getAttribute(attribute)
+		attr: function(attribute, value) {
+			var elem = this[0];
+
+			// if (typeof attribute === "object")
+			// {
+			// 	var obj = attribute;
+			// 	for (var prop in obj)
+			// 	{
+			// 		elem.setAttribute( prop, obj[prop] )
+			// 	}
+			// }
+			if (value)
+			{
+				elem.setAttribute(attribute, value)
+			}
+			else
+				return elem.getAttribute(attribute)
+
+		},
+		css : function(attribute, value) {
+			var elem = this[0],
+
+				style, attr;
+
+			if (typeof attribute === "object")
+			{
+				var obj = attribute;
+				for (var prop in obj)
+				{
+					elem.style[ prop ] = obj[prop]
+				}
+			}
+			if (value) {
+				elem.style[attribute] = value
+			}
+			else
+			{
+				style = window.getComputedStyle(elem),
+				attr = style.getPropertyValue(attribute)
+			}
+
+				return attr
 		},
 
 

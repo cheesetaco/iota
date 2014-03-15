@@ -1,13 +1,15 @@
 <head>
 
 <style>
+@import url(http://fonts.googleapis.com/css?family=Droid+Sans:400,700);
+
 
 * {
 	padding	:0;
 	margin 	:0;
 	line-height	: 1.7; 
 	vertical-align: baseline;
-	font-family	: 'Open Sans', helvetica; 
+	font-family	: 'Droid Sans', 'Open Sans', helvetica; 
 	font-size	: 15px;
 	color 		: rgb(105,105,100);
 }
@@ -23,47 +25,60 @@ block {
 	margin-bottom : 5px;
 }
 
-div#content {
+#content {
 	position	: absolute; 
 	left		: 25%; 
 	width		: 50%; 
 	margin-top	: 3em;
 	display: inline-block;
 }
-div#edit {
+#edit {
 	position:absolute;
 	width: 20%;
 	left:75%;
 	top:1em;
 }
-div#editButton {
+#editButton, #commitButton {
 	float:left;
-	width:30%;
+	width:35%;
 	height: 30px; 
-	background-color: gray;
+	line-height: 30px;
+	font-size: 12px;
+	text-align: center;
+
+	-moz-user-select: none; 
+	-khtml-user-select: none; 
+	-webkit-user-select: none; 
+	-o-user-select: none;
+	cursor : default;
+
+	border: 1px solid #CCC;
+	color: #BBB;
 }
-div#commitChanges {
-	float:left;
-	width:40%;
-	height: 30px;
-	background-color: lime;
+#commitButton {
+	float: right;
 }
-div#test {
-	float:left;
-	width:30%;
-	height: 30px;
-	background-color: tomato;
+#editButton:hover { 
+	border: 1px solid #AAA;
+	color: #777;
 }
+#commitButton:hover {
+	border: 1px solid #F64;
+	color: white;
+	background-color: #ED6327	
+}
+
 [contenteditable="true"]:active,
 [contenteditable="true"]:focus {
 	border: none;
 	outline: none;
 }
-div#four0four {
+#four0four {
 	font-size: 48px;
 }
 </style>
 </head>
+
 
 
 <!-- <script data-main="http://localhost:8080/client/main.js" src="http://localhost:8080/lib/require.js"></script>
@@ -71,11 +86,10 @@ div#four0four {
 <div id="content">
 <!-- content dynamically loaded here based on url and ajax requests-->
 </div>
-<div class="moop"></div>
+
 <div id="edit">
-	<div id="editButton" toggle="off">edit</div>
-	<div id="commitChanges">Commit</div>
-	<div id="test"> test </div>
+	<div id="editButton">edit</div>
+	<div id="commitButton" style="display: none; opacity: 0">Commit</div>
 </div>
 
 <script src="http://localhost:8080/lib/jquery.js"></script>
