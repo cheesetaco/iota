@@ -5,81 +5,45 @@ CORE.register('router', function(sb) {
 
 	return {
 		init: function() {
-			CORE.start('router:pathTree/share');
-			CORE.start('router:pathTree/cacher')
+			CORE.start('router:pathTree/cache')
 		},
 		destroy: function() {
 			CORE.stop('router:pathTree/share');
-			CORE.stop('router:pathTree/cacher')
 		}
 
 	}
 })
 
-CORE.register('router:pathTree/cacher', function(sb) {
-	var pathTree,
-		pathname = location.pathname;
-
+CORE.register('router:pathTree/cache', function(sb) {
+	var pathname = location.pathname, 
+		pathTree
 
 	return {
 		init: function() {
 			pathTree = this.getPathTree()
+			sb.cache('pathTree', pathTree)
+			this.requestBlocks()
+			sb.dispatch('(router)pathTree/cached')
+
 		},
 		destroy: function() {
-
+			sb.cache('pathTree', " ")
 		},
 		getPathTree : function() {
-			pathTree = pathname.split('/');
-			pathTree = pathTree.splice(1,pathTree.length); //remove first
 
+			pathTree = pathname.split('/')
+			pathTree = pathTree.splice(1,pathTree.length); //remove first
 			if (pathTree[pathTree.length-1] == "") // if location had a trailing "/"
 				pathTree.pop(); 
 
-			this.cachePathTree();
-
 			return pathTree
 		},
-		cachePathTree : function() {
-			sb.cacher({
-				name : 'pathTree',
-				data : pathTree
-			})
-
-			sb.dispatch('(router)pathTree/cached')
-		}
-	}
-})
-
-CORE.register('router:pathTree/share', function(sb) {
-	var self 	 = this,
-		pathname = location.pathname,
-		pathTree;
-
-		
-	return {
-		init : function() {
-			sb.listen({
-				"(router)pathTree/cached" : this.pathCatalyst
-			})
-		},
-		destroy : function() {
-			sb.ignore(['(router)pathTree/cached'])
-		},
-		pathCatalyst : function() {
-			var pathList;
-			pathTree = sb.cache.pathTree
-
-			if (pathname !== "/")
-				pathList = pathTree
+		requestBlocks : function() {
+			if (pathname == "/")
+				sb.dispatch('(body)model/blocks/get', ["home"])
 			else
-				pathList = ["home"]
-
-			sb.dispatch({
-				type: '(router)path/cached',
-				data: pathList
-			})
+				sb.dispatch('(body)model/blocks/get', pathTree)			
 		}
-		
 	}
 })
 

@@ -38,7 +38,7 @@ var CORE = (function ($) {
 
 			if (mod) {
 				mod.instance = mod.instantiate(sandbox);
-				console.log("started: "+moduleID)
+				// console.log("started: "+moduleID)
 				mod.instance.init();
 			}
 		},
@@ -114,14 +114,23 @@ var CORE = (function ($) {
 				}
 			}
 		},
-		triggerEvent: function(eventObj) {
+		triggerEvent: function(eventObj, data) {
 			var event, prop, mod, caller, callerInst;
-			if (typeof eventObj === "object") 
-				event = eventObj.type;
+			
+			if (data)
+			{
+				if (typeof eventObj === "string") { 
+					event = eventObj
+					eventObj = {data: data}
+				}
+			}
 			else if (typeof eventObj === "string") //adjust variables if eventObj is a string :: has no data
 				event = eventObj
+			else if (typeof eventObj === "object")
+				event = eventObj.type;
 			
 console.log("_EVENT_: "+event)
+
 			for (prop in modLib)
 			{
 				if(modLib.hasOwnProperty(prop))
@@ -142,13 +151,20 @@ console.log("_EVENT_: "+event)
 			}
 
 		},
-		cache: function(obj) {
-			cacheLib[obj.name] = obj.data
-		},
-		getCacheLib : function() {
-			return cacheLib
-		}
+		cache: function(cachee, value) {
+			if (value) {
+				if (typeof cachee === "string") 
+					cacheLib[cachee] = value
+			}
+			else if (typeof cachee === "string") 
+				return cacheLib[cachee]
+			
+			else if (typeof cachee === "object")
+				cacheLib[cachee.name] = cachee.data
 
+			else
+				console.log('youfuckingseriousman?')
+		}
 	}
 }(jQuery))
 
@@ -174,15 +190,14 @@ var Sandbox = (function() {
 						core.unregisterEvents(events, module_ID)
 					}
 				},
-				dispatch: function(eventObj) {
-					core.triggerEvent(eventObj)
+				dispatch: function(eventObj, data) {
+					core.triggerEvent(eventObj, data)
 				},
-				cacher: function(obj) {
-					core.cache(obj)
-				},
-				cache: (function() {
-					return core.getCacheLib()
-				}())
+				cache: function(cachee, data) {
+					var returned = core.cache(cachee, data)
+					if (returned)
+						return returned
+				}
 			}
 		}
 	}

@@ -321,11 +321,17 @@ function requestListener(request, response) {
 
 		request.on('data', function(data) {
 			var jsonObject = JSON.parse(data),
-				parentNodes = jsonObject.parentNodes,
-				query = neo_getIDofEndNode(parentNodes);
+				parentNodes = jsonObject.parentNodes;
+
+				console.log(jsonObject)
+			if(parentNodes && parentNodes.length > 0)
+			{
+				var	query = neo_getIDofEndNode(parentNodes);
+				askNeo(query, neo_getBlocksFromID);
+				
+			}
 
 			// console.log(query)
-			askNeo(query, neo_getBlocksFromID);
 		})
 	}
 

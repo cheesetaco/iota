@@ -53,9 +53,9 @@ CORE.register('body:view/seeds/arm', function(sb) {
 	return {
 		init: function() {
 			sb.listen({
-				'(router)pathTree/cached' : this.cachePathTree,
-				'view/blocks/displayed'		: this.armSeeds,
-				'(sidebar)view/buttons/edit/on' : this.disarmSeeds,
+				'(router)pathTree/cached' 		 : this.getPathTree,
+				'view/blocks/displayed'			 : this.armSeeds,
+				'(sidebar)view/buttons/edit/on'  : this.disarmSeeds,
 				'(sidebar)view/buttons/edit/off' : this.armSeeds
 			})
 		},
@@ -63,8 +63,8 @@ CORE.register('body:view/seeds/arm', function(sb) {
 			sb.ignore['(router)pathTree/cached','view/blocks/displayed','view/edit/on','view/edit/off']
 			this.disarmSeeds()
 		},
-		cachePathTree: function() {
-			pathTree = sb.cache.pathTree
+		getPathTree: function() {
+			pathTree = sb.cache('pathTree')
 		},
 		armSeeds : function() 
 		{
@@ -141,16 +141,16 @@ CORE.register('body:view/render', function(sb) {
 //MODEL
 CORE.register('body:model/get', function(sb) {
 
-	var paths,
+	var pathTree,
 
-	request = function(eventObj) {
-		paths = eventObj.data;
+	request = function(evtObj) {
+		var path = evtObj.data
 
 		$.ajax({
 			url: '/?getChildren',
 			type: "POST",
 			dataType: "json",
-			data: JSON.stringify({parentNodes: paths}),//send as a Buffer? so node can read it
+			data: JSON.stringify({parentNodes: path}),//send as a Buffer? so node can read it
 			success: function(response) {
 				sb.dispatch({
 					type: 'request/blocks/done',
@@ -162,11 +162,11 @@ CORE.register('body:model/get', function(sb) {
 	return {
 		init: function() {
 			sb.listen({
-				'(router)path/cached' : request
+				'(body)model/blocks/get' : request
 			})
 		},
 		destroy: function() {
-			sb.ignore(['(router)path/cached'])
+			sb.ignore(['(body)model/blocks/get'])
 		}
 	}
 })

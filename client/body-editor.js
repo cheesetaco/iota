@@ -12,37 +12,47 @@ CORE.register('body:editor', function(sb) {
 			CORE.stop('body:view/editor/selection')
 			CORE.stop('body:view/editor/keys/enter')
 			CORE.stop('body:view/editor/keys')
-			CORE.stop('body:view/editor/on')
+			CORE.stop('body:view/editor/start')
 		},
 		create : function() {
 			CORE.start('body:view/editor/selection')
 			CORE.start('body:view/editor/keys/enter')
 			CORE.start('body:view/editor/keys')
-			CORE.start('body:view/editor/on')
+			CORE.start('body:view/editor/start')
 		}
 	}
 })
 
-CORE.register('body:view/editor/on', function(sb) {
-	var $content_container = sb.dom('#content');
+CORE.register('body:view/editor/start', function(sb) {
+	var $container; 
 
 	return {
 		init: function() {
-			$content_container.attr('contenteditable', true)
+			sb.cache({
+				name : "$container",
+				data : sb.dom('#content')
+			});
+			sb.listen({'view/editor/on':this.stuff})
 			sb.dispatch('view/editor/on')
 		},
 		destroy: function() {
-			$content_container.attr('contenteditable', "false")
+			sb.listen({'view/editor/off':this.unstuff})
 			sb.dispatch('view/editor/off')
 		},
-		body_checkifEmpty : function() {
-
+		stuff : function() {
+			$container = sb.cache('$container')
+			console.log($container)
+			$container.attr('contenteditable', true)
 		},
+		unstuff : function() {
+
+			$container.attr('contenteditable', "false")
+		}
 
 	}
 })
 CORE.register('body:view/editor/keys', function(sb) {
-	var $content_container = $('#content');
+	var $container = $('#content');
 
 	return {
 		init : function() {
@@ -55,7 +65,7 @@ CORE.register('body:view/editor/keys', function(sb) {
 			sb.ignore(['view/editor/on','view/editor/off'])
 		},
 		armKeys : function() {
-			$content_container.on("keydown", function(event) {
+			$container.on("keydown", function(event) {
 				var key = event.which
 
 				switch (key)
@@ -66,15 +76,15 @@ CORE.register('body:view/editor/keys', function(sb) {
 					// default :
 					// 	console.log("nah")
 				}
-				
-
 			})
+		},
+		disarmKeys : function() {
+
 		}
 	}
 })
 	CORE.register('body:view/editor/keys/enter', function(sb) {
-		var $content_container = $('#content')
-
+		var $container = $('#content')
 
 		return {
 			init: function() {
