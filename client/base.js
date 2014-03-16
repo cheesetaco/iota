@@ -71,8 +71,9 @@ var dom;
 
 		},
 		off: function(eventType) {
-			for (var i=0 ; i , this.length ; i++)
+			for (var i=0 ; i < this.length ; i++)
 			{
+				console.log(this)
 				this[i].removeEventListener(eventType)
 			}
 		},

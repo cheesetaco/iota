@@ -27,17 +27,17 @@ CORE.register('body:model/cache', function(sb) {
 	return {
 		init : function() {
 			sb.listen({
-				'request/body/done' : this.cacheResponse_body
+				'request/blocks/done' : this.cacheResponse_body
 			})
 		},
 		destroy : function() {
-			sb.ignore(['request/body/done'])
+			sb.ignore(['request/blocks/done'])
 		},
 		cacheResponse_body : function(eventObj) {
 			var response = eventObj.data;
 
 			sb.dispatch({
-				type: "model/cached",
+				type: "model/blocks/cached",
 				data: response
 			})
 		}
@@ -53,14 +53,14 @@ CORE.register('body:view/seeds/arm', function(sb) {
 	return {
 		init: function() {
 			sb.listen({
-				'router/pathTree/cached' : this.cachePathTree,
-				'view/displayed'		: this.armSeeds,
+				'(router)pathTree/cached' : this.cachePathTree,
+				'view/blocks/displayed'		: this.armSeeds,
 				'(sidebar)view/buttons/edit/on' : this.disarmSeeds,
 				'(sidebar)view/buttons/edit/off' : this.armSeeds
 			})
 		},
 		destroy: function() {
-			sb.ignore['router/pathTree/cached','view/displayed','view/edit/on','view/edit/off']
+			sb.ignore['(router)pathTree/cached','view/blocks/displayed','view/edit/on','view/edit/off']
 			this.disarmSeeds()
 		},
 		cachePathTree: function() {
@@ -87,17 +87,17 @@ CORE.register('body:view/display', function(sb) {
 	return {
 		init: function() {
 			sb.listen({
-				'view/rendered' : this.displayBody
+				'view/blocks/rendered' : this.displayBody
 			})
 		},
 		destroy: function() {
-			sb.ignore(['view/rendered'])
+			sb.ignore(['view/blocks/rendered'])
 		},
 		displayBody : function(evtObj) {
 			var blocksArray = evtObj.data
 			$('#content').append(blocksArray)
 
-			sb.dispatch("view/displayed")
+			sb.dispatch("view/blocks/displayed")
 		}
 	}
 })
@@ -110,11 +110,11 @@ CORE.register('body:view/render', function(sb) {
 	return {
 		init : function() {
 			sb.listen({
-				'model/cached' : this.renderBody
+				'model/blocks/cached' : this.renderBody
 			})
 		},
 		destroy : function() {
-			sb.ignore(['model/cached'])
+			sb.ignore(['model/blocks/cached'])
 		},
 		renderBody : function(evtObj) {
 			var response = evtObj.data,
@@ -128,7 +128,7 @@ CORE.register('body:view/render', function(sb) {
 			}
 
 			sb.dispatch({
-				type: 'view/rendered',
+				type: 'view/blocks/rendered',
 				data: blocksArray
 			})
 		}
@@ -153,7 +153,7 @@ CORE.register('body:model/get', function(sb) {
 			data: JSON.stringify({parentNodes: paths}),//send as a Buffer? so node can read it
 			success: function(response) {
 				sb.dispatch({
-					type: 'request/body/done',
+					type: 'request/blocks/done',
 					data: response
 				})
 			}
@@ -162,11 +162,11 @@ CORE.register('body:model/get', function(sb) {
 	return {
 		init: function() {
 			sb.listen({
-				'router/path/cached' : request
+				'(router)path/cached' : request
 			})
 		},
 		destroy: function() {
-			sb.ignore(['router/path/cached'])
+			sb.ignore(['(router)path/cached'])
 		}
 	}
 })

@@ -69,25 +69,31 @@ var CORE = (function ($) {
 			}
 
 		},
-		registerEvents : function(events, moduleID)
+		registerEvents : function(eventObj, moduleID)
 		{
 			var mod = moduleID,
 				evt, evts;
 
-			if (this.util.is_obj(events) && mod && (mod = modLib[mod]) ) 
+
+			if (this.util.is_obj(eventObj) && mod && (mod = modLib[mod]) ) 
 			{
 				if (!(evts = mod.events)) //create property: events object
-					{
-						mod.events = events
-					}
-				else //add or replace events
-				{					
-					for (evt in events)//cycle through events obj
-					{
-						mod.events[evt] = events[evt] //add event to module
-					}
+				{
+					mod.events = eventObj
+					mod.events.caller = moduleID
+					// console.log(mod.events.caller)
 				}
+				// else //add or replace events
+				// {
+				// 	for (evt in evts)//cycle through events obj
+				// 	{
+				// 		mod.events[evt] = {}
+				// 		mod.events[evt].caller = moduleID
+				// 		mod.events[evt].callback = eventObj[evt] //add event to module
+				// 	}
+				// }
 			}
+
 		},
 		unregisterEvents : function(events, moduleID)
 		{
@@ -99,7 +105,7 @@ var CORE = (function ($) {
 				// console.log(events)
 				for ( evt in (evts = mod.events) )
 				{
-					for (i=0 ; i<events.length ; i++)
+					for (var i=0 ; i<events.length ; i++)
 					{
 						if (evt == events[i]) {
 							delete mod.events[evt]
@@ -109,22 +115,27 @@ var CORE = (function ($) {
 			}
 		},
 		triggerEvent: function(eventObj) {
-			var event, mod;
-
+			var event, prop, mod, caller, callerInst;
 			if (typeof eventObj === "object") 
 				event = eventObj.type;
 			else if (typeof eventObj === "string") //adjust variables if eventObj is a string :: has no data
 				event = eventObj
-
-				
-			for (mod in modLib)
+			
+console.log("_EVENT_: "+event)
+			for (prop in modLib)
 			{
-				if(modLib.hasOwnProperty(mod))
+				if(modLib.hasOwnProperty(prop))
 				{
-					mod = modLib[mod];
+					mod = modLib[prop];
 
-					if (mod.events && mod.events[event]) {
-						// console.log(mod.events[event])
+					if (mod.events && mod.events[event]) 
+					{
+						caller 	  = mod.events.caller,
+						callerInst = modLib[caller].instance,
+						eventObj  = {	event 	: event,
+										data 	: eventObj.data,
+										caller 	: callerInst	 }
+
 						mod.events[event](eventObj);//trigger event and send to callback
 					}
 				}

@@ -38,7 +38,7 @@ CORE.register('sidebar:view/buttons/edit/arm', function(sb) {
 			this.disarmEditButton()
 		},
 		armEditButton : function() {
-			$editButton.on('click', function(event) 
+			$editButton.on('click', function() 
 			{
 				if (!clicked) 
 				{
@@ -56,6 +56,8 @@ CORE.register('sidebar:view/buttons/edit/arm', function(sb) {
 		},
 		disarmEditButton : function() {
 			$editButton.off('click')
+			sb.dispatch('(sidebar)view/buttons/edit/off')
+
 		},
 		funcss : function() {
 			$editButton.css({
@@ -80,7 +82,7 @@ CORE.register('sidebar:view/buttons/commit/arm', function(sb) {
 	return {
 		init: function() {
 			sb.listen({
-				"(sidebar)view/buttons/edit/on" : this.funcss,
+				"(sidebar)view/buttons/edit/on"  : this.funcss,
 				"(sidebar)view/buttons/edit/off" : this.notfuncss
 			})
 

@@ -45,7 +45,7 @@ CORE.register('router:pathTree/cacher', function(sb) {
 				data : pathTree
 			})
 
-			sb.dispatch('router/pathTree/cached')
+			sb.dispatch('(router)pathTree/cached')
 		}
 	}
 })
@@ -59,11 +59,11 @@ CORE.register('router:pathTree/share', function(sb) {
 	return {
 		init : function() {
 			sb.listen({
-				"router/pathTree/cached" : this.pathCatalyst
+				"(router)pathTree/cached" : this.pathCatalyst
 			})
 		},
 		destroy : function() {
-			sb.ignore(['router/path/req'])
+			sb.ignore(['(router)pathTree/cached'])
 		},
 		pathCatalyst : function() {
 			var pathList;
@@ -75,7 +75,7 @@ CORE.register('router:pathTree/share', function(sb) {
 				pathList = ["home"]
 
 			sb.dispatch({
-				type: 'router/path/cached',
+				type: '(router)path/cached',
 				data: pathList
 			})
 		}
