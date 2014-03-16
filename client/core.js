@@ -38,7 +38,7 @@ var CORE = (function ($) {
 
 			if (mod) {
 				mod.instance = mod.instantiate(sandbox);
-				// console.log("started: "+moduleID)
+console.log("started: "+moduleID)
 				mod.instance.init();
 			}
 		},
@@ -69,29 +69,35 @@ var CORE = (function ($) {
 			}
 
 		},
-		registerEvents : function(eventObj, moduleID)
+		registerEvents : function(eventObj, callback, moduleID)
 		{
 			var mod = moduleID,
-				evt, evts;
+				module, evt;
 
-
-			if (this.util.is_obj(eventObj) && mod && (mod = modLib[mod]) ) 
+			if ( mod && (module = modLib[mod]) ) 
 			{
-				if (!(evts = mod.events)) //create property: events object
+				if (!module.events && !callback)
 				{
-					mod.events = eventObj
-					mod.events.caller = moduleID
-					// console.log(mod.events.caller)
+					module.events = eventObj
+					module.events.caller = moduleID
 				}
-				// else //add or replace events
-				// {
-				// 	for (evt in evts)//cycle through events obj
-				// 	{
-				// 		mod.events[evt] = {}
-				// 		mod.events[evt].caller = moduleID
-				// 		mod.events[evt].callback = eventObj[evt] //add event to module
-				// 	}
-				// }
+				else if (!module.events && callback)
+				{
+					module.events = {}
+					module.events[eventObj] = callback
+					module.events.caller = moduleID
+				}
+				else if (module.events && callback)
+				{
+					module.events[eventObj] = callback			
+				}
+				else if (module.events && !callback) 
+				{
+					for (evt in eventObj)
+					{
+						module.events[evt] = eventObj[evt]
+					}
+				}
 			}
 
 		},
@@ -177,11 +183,13 @@ var Sandbox = (function() {
 				dom : function (selector) {
 					return core.dom(selector)
 				},
-				listen : function(events) {
-					if (core.util.is_obj(events)) 
-					{
-						core.registerEvents(events, module_ID);
-					}
+				listen : function(events, callback) {
+
+					if (callback && typeof callback === "function" && typeof events === "string") 
+						core.registerEvents(events, callback, module_ID)
+					else if (typeof events === "object") 
+						core.registerEvents(events, null, module_ID);
+
 				},
 				ignore: function(events) { //array
 

@@ -9,16 +9,16 @@ CORE.register('body:editor', function(sb) {
 			})
 		},
 		destroy : function() {
+			CORE.stop('body:view/editor/start')
 			CORE.stop('body:view/editor/selection')
 			CORE.stop('body:view/editor/keys/enter')
 			CORE.stop('body:view/editor/keys')
-			CORE.stop('body:view/editor/start')
 		},
 		create : function() {
+			CORE.start('body:view/editor/start')
 			CORE.start('body:view/editor/selection')
 			CORE.start('body:view/editor/keys/enter')
 			CORE.start('body:view/editor/keys')
-			CORE.start('body:view/editor/start')
 		}
 	}
 })
@@ -28,20 +28,17 @@ CORE.register('body:view/editor/start', function(sb) {
 
 	return {
 		init: function() {
-			sb.cache({
-				name : "$container",
-				data : sb.dom('#content')
-			});
-			sb.listen({'view/editor/on':this.stuff})
+			sb.cache( "view/body" , sb.dom('#content') );
+			sb.listen('view/editor/on', this.stuff)
+			sb.listen('view/editor/off', this.unstuff)
 			sb.dispatch('view/editor/on')
 		},
 		destroy: function() {
-			sb.listen({'view/editor/off':this.unstuff})
 			sb.dispatch('view/editor/off')
 		},
 		stuff : function() {
-			$container = sb.cache('$container')
-			console.log($container)
+			$container = sb.cache('view/body')
+
 			$container.attr('contenteditable', true)
 		},
 		unstuff : function() {
@@ -52,10 +49,12 @@ CORE.register('body:view/editor/start', function(sb) {
 	}
 })
 CORE.register('body:view/editor/keys', function(sb) {
-	var $container = $('#content');
+	var $container;
 
 	return {
 		init : function() {
+			$container = sb.cache('view/body')
+
 			sb.listen({
 				'view/editor/on' : this.armKeys,
 				'view/editor/off' : this.disarmKeys
@@ -84,12 +83,14 @@ CORE.register('body:view/editor/keys', function(sb) {
 	}
 })
 	CORE.register('body:view/editor/keys/enter', function(sb) {
-		var $container = $('#content')
+		var $container
 
 		return {
 			init: function() {
+				$container = sb.cache('view/body')
+
 				sb.listen({
-					'view/editor/selection/post' : this.newline,
+					'view/editor/selection/post' : this.newLine,
 					'view/editor/keys/enter' : this.getSelectionObj
 				})
 			},
@@ -99,8 +100,8 @@ CORE.register('body:view/editor/keys', function(sb) {
 			getSelectionObj : function(evt) {
 				sb.dispatch('view/editor/selection/get')
 			},
-			newLine : function() {
-				console.log('ham')
+			newLine : function(evtObj) {
+				console.log(evtObj)
 			}
 
 		}
@@ -119,17 +120,14 @@ CORE.register('body:view/editor/keys', function(sb) {
 			init: function() {
 				sb.listen({
 					'view/editor/on' : this.define,					
-					'view/editor/selection/get' : this.getSelection
+					'view/editor/selection/get' : this.shareSelectionObj
 				})
 			},
 			destroy: function() {
 				sb.ignore(['view/editor/selection/get','view/buttons/edit/on'])
 			},
-			define : function() {
-				block = document.createElement("block")
-				range = document.createRange()
-			},			
-			shareSelectionObject : function() {
+			shareSelectionObj : function() {
+				selectionObj = getSelection()
 				sb.dispatch({
 					type : 'view/editor/selection/post',
 					data : selectionObj
@@ -152,10 +150,9 @@ CORE.register('body:view/editor/keys', function(sb) {
 					self.noSelection()					
 				}
 
-				selectionObj = {
-
+				return {
+					selectionStart : selectionStart
 				}
-				// self.shareSelectionObject()
 			},
 			//blinking caret
 			noSelection : function() {
@@ -167,6 +164,10 @@ CORE.register('body:view/editor/keys', function(sb) {
 
 				range.setStart(cursorNode, cursorPosition)
 				range.setEnd(cursorNode, endofNode)
+			},
+			define : function() {
+				block = document.createElement("block")
+				range = document.createRange()
 			}
 		}
 	})
