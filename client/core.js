@@ -38,7 +38,7 @@ var CORE = (function ($) {
 
 			if (mod) {
 				mod.instance = mod.instantiate(sandbox);
-console.log("started: "+moduleID)
+// console.log("started: "+moduleID)
 				mod.instance.init();
 			}
 		},
@@ -120,7 +120,7 @@ console.log("started: "+moduleID)
 				}
 			}
 		},
-		triggerEvent: function(eventObj, data) {
+		triggerEvent: function(eventObj, data) { //clean this up
 			var event, prop, mod, asker, askerInst;
 			
 			if (data)
@@ -135,7 +135,7 @@ console.log("started: "+moduleID)
 			else if (typeof eventObj === "object")
 				event = eventObj.type;
 			
-console.log("_EVENT_: "+event)
+// console.log("_EVENT_: "+event)
 
 			for (prop in modLib)
 			{
