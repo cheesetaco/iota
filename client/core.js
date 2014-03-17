@@ -79,13 +79,13 @@ console.log("started: "+moduleID)
 				if (!module.events && !callback)
 				{
 					module.events = eventObj
-					module.events.caller = moduleID
+					module.events.asker = moduleID
 				}
 				else if (!module.events && callback)
 				{
 					module.events = {}
 					module.events[eventObj] = callback
-					module.events.caller = moduleID
+					module.events.asker = moduleID
 				}
 				else if (module.events && callback)
 				{
@@ -121,7 +121,7 @@ console.log("started: "+moduleID)
 			}
 		},
 		triggerEvent: function(eventObj, data) {
-			var event, prop, mod, caller, callerInst;
+			var event, prop, mod, asker, askerInst;
 			
 			if (data)
 			{
@@ -145,11 +145,11 @@ console.log("_EVENT_: "+event)
 
 					if (mod.events && mod.events[event]) 
 					{
-						caller 	  = mod.events.caller,
-						callerInst = modLib[caller].instance,
+						asker 	  = mod.events.asker,
+						askerInst = modLib[asker].instance,
 						eventObj  = {	event 	: event,
 										data 	: eventObj.data,
-										caller 	: callerInst	 }
+										asker 	: askerInst	 }
 
 						mod.events[event](eventObj);//trigger event and send to callback
 					}

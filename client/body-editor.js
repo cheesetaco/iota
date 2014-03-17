@@ -19,30 +19,34 @@ CORE.register('body:editor', function(sb) {
 			CORE.start('body:view/editor/selection')
 			CORE.start('body:view/editor/keys/enter')
 			CORE.start('body:view/editor/keys')
+			
+			sb.dispatch('view/editor/loaded')
 		}
 	}
 })
 
 CORE.register('body:view/editor/start', function(sb) {
-	var $container; 
+	var $container
 
 	return {
 		init: function() {
-			sb.cache( "view/body" , sb.dom('#content') );
-			sb.listen('view/editor/on', this.stuff)
-			sb.listen('view/editor/off', this.unstuff)
-			sb.dispatch('view/editor/on')
+			sb.listen({
+				'(body)view/master/cached' : this.stuff,
+				'view/editor/loaded': function() {
+					sb.dispatch('(body)view/master/cached', sb.dom('#content'))
+				}
+			})
+
 		},
 		destroy: function() {
-			sb.dispatch('view/editor/off')
+			sb.ignore(['(body)view/master/cached','body'])
 		},
-		stuff : function() {
-			$container = sb.cache('view/body')
+		stuff : function(event) {
+			$container = event.data
 
 			$container.attr('contenteditable', true)
 		},
 		unstuff : function() {
-
 			$container.attr('contenteditable', "false")
 		}
 
@@ -53,24 +57,21 @@ CORE.register('body:view/editor/keys', function(sb) {
 
 	return {
 		init : function() {
-			$container = sb.cache('view/body')
-
-			sb.listen({
-				'view/editor/on' : this.armKeys,
-				'view/editor/off' : this.disarmKeys
-			})
+			sb.listen('(body)view/master/cached', this.armKeys)
 		},
 		destroy : function() {
-			sb.ignore(['view/editor/on','view/editor/off'])
+			sb.ignore(['(body)view/master/cached'])
+			this.disarmKeys
 		},
-		armKeys : function() {
+		armKeys : function(event) {
+			$container = $('#content')
 			$container.on("keydown", function(event) {
 				var key = event.which
 
 				switch (key)
 				{	
 					case 13 :
-						sb.dispatch('view/editor/keys/enter')
+						sb.dispatch('view/editor/keys/enter/press')
 						break
 					// default :
 					// 	console.log("nah")
@@ -78,30 +79,29 @@ CORE.register('body:view/editor/keys', function(sb) {
 			})
 		},
 		disarmKeys : function() {
-
+			$container.off('keydown')
 		}
 	}
 })
 	CORE.register('body:view/editor/keys/enter', function(sb) {
-		var $container
+		var selectionObj;
 
 		return {
 			init: function() {
-				$container = sb.cache('view/body')
-
 				sb.listen({
-					'view/editor/selection/post' : this.newLine,
-					'view/editor/keys/enter' : this.getSelectionObj
+					'view/editor/selection/post'	: this.newLine,
+					'view/editor/keys/enter/press' 	: function() {
+						sb.dispatch('view/editor/selection/get')
+					}
 				})
 			},
 			destroy: function() {
-				sb.ignore(["view/editor/keys/enter", 'view/editor/selection/post'])
-			},
-			getSelectionObj : function(evt) {
-				sb.dispatch('view/editor/selection/get')
+				sb.ignore(["view/editor/selection/post", 'view/editor/selection/get'])
 			},
 			newLine : function(evtObj) {
-				console.log(evtObj)
+				selectionObj = evtObj.data
+
+				console.log(selectionObj)
 			}
 
 		}
@@ -119,22 +119,25 @@ CORE.register('body:view/editor/keys', function(sb) {
 		return {
 			init: function() {
 				sb.listen({
-					'view/editor/on' : this.define,					
-					'view/editor/selection/get' : this.shareSelectionObj
+					'view/editor/loaded' : this.define,					
+					'view/editor/selection/get' : this.postSelectionObj
 				})
 			},
 			destroy: function() {
 				sb.ignore(['view/editor/selection/get','view/buttons/edit/on'])
 			},
-			shareSelectionObj : function() {
-				selectionObj = getSelection()
-				sb.dispatch({
-					type : 'view/editor/selection/post',
-					data : selectionObj
-				})
+			define : function() {
+				block = document.createElement("block")
+				range = document.createRange()
+			},			
+			postSelectionObj : function(event) {
+				self = event.asker
+
+				selectionObj = self.selection(self)
+
+				sb.dispatch('view/editor/selection/post', selectionObj)
 			},
-			getSelection: function(event) {
-				var self = event.caller;
+			selection: function(self) {
 
 				//retrieve selection info
 				userSelection = window.getSelection()
@@ -147,11 +150,7 @@ CORE.register('body:view/editor/keys', function(sb) {
 				if ( selectionStart === selectionEnd && 
 					 selectionStartNode === selectionEndNode )
 				{
-					self.noSelection()					
-				}
-
-				return {
-					selectionStart : selectionStart
+					return self.noSelection()					
 				}
 			},
 			//blinking caret
@@ -164,10 +163,12 @@ CORE.register('body:view/editor/keys', function(sb) {
 
 				range.setStart(cursorNode, cursorPosition)
 				range.setEnd(cursorNode, endofNode)
-			},
-			define : function() {
-				block = document.createElement("block")
-				range = document.createRange()
+
+				return {
+					selectionStart  : selectionStart,
+					cursorNode		: cursorNode
+
+				}
 			}
 		}
 	})
