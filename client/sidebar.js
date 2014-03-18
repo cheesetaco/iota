@@ -82,8 +82,8 @@ CORE.register('sidebar:view/buttons/commit/arm', function(sb) {
 	return {
 		init: function() {
 			sb.listen({
-				"(sidebar)view/buttons/edit/on"  : this.funcss,
-				"(sidebar)view/buttons/edit/off" : this.notfuncss
+				"(sidebar)view/buttons/edit/on"  : [this.funcss, this.armCommitButton],
+				"(sidebar)view/buttons/edit/off" : [this.notfuncss, this.disarmCommitButton]
 			})
 
 		},
@@ -91,10 +91,12 @@ CORE.register('sidebar:view/buttons/commit/arm', function(sb) {
 			sb.ignore(["(sidebar)view/buttons/edit/on","(sidebar)view/buttons/edit/off"])
 		},
 		armCommitButton : function() {
-
+			$commitButton.on('click', function() {
+				sb.dispatch('(sidebar)view/buttons/commit/fired')
+			})
 		},
 		disarmCommitButton : function() {
-
+			$commitButton.off('click')
 		},
 		funcss : function() {
 			$commitButton.css('display', 'block')

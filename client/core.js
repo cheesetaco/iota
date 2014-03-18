@@ -72,20 +72,21 @@ var CORE = (function ($) {
 		registerEvents : function(eventObj, callback, moduleID)
 		{
 			var mod = moduleID,
+				module = modLib[mod],
 				module, evt;
 
-			if ( mod && (module = modLib[mod]) ) 
+			if ( mod && modLib[mod] ) 
 			{
 				if (!module.events && !callback)
 				{
 					module.events = eventObj
-					module.events.asker = moduleID
+					module.events.selfID = mod
 				}
 				else if (!module.events && callback)
 				{
 					module.events = {}
 					module.events[eventObj] = callback
-					module.events.asker = moduleID
+					module.events.selfID = mod
 				}
 				else if (module.events && callback)
 				{
@@ -101,12 +102,42 @@ var CORE = (function ($) {
 			}
 
 		},
+		triggerEvent: function(event, data) { //clean this up
+			var eventObj, prop, mod, selfID, selfInst, self, callback;
+
+// console.log("_EVENT_: "+event)
+
+			for (prop in modLib)
+			{
+				if(modLib.hasOwnProperty(prop)) //get all properties of all modules
+				{
+					mod = modLib[prop]
+					if (mod.events && (callback = mod.events[event]) ) //check if module has event we want to trigger
+					{
+						selfID 	 = mod.events.selfID,
+						selfInst = modLib[selfID].instance,
+						eventObj = {	event 	: event,
+										data 	: data,
+										self 	: selfInst	}
+						
+						if (typeof callback == "function")
+							callback(eventObj) //trigger listener callback function
+
+						else if (callback instanceof Array) {
+							for (var i=0 ; i<callback.length ; i++)
+								callback[i](eventObj)
+						}
+					}
+				}
+			}
+
+		},
 		unregisterEvents : function(events, moduleID)
 		{
 			var mod = moduleID,
 				evt, evts;
 			if (this.util.is_arr(events) && mod && 
-				(mod = modLib[mod]) && mod.events) 
+				(mod = modLib[mod]) && mod.events)
 			{
 				// console.log(events)
 				for ( evt in (evts = mod.events) )
@@ -120,49 +151,12 @@ var CORE = (function ($) {
 				}
 			}
 		},
-		triggerEvent: function(eventObj, data) { //clean this up
-			var event, prop, mod, asker, askerInst;
-			
-			if (data)
-			{
-				if (typeof eventObj === "string") { 
-					event = eventObj
-					eventObj = {data: data}
-				}
-			}
-			else if (typeof eventObj === "string") //adjust variables if eventObj is a string :: has no data
-				event = eventObj
-			else if (typeof eventObj === "object")
-				event = eventObj.type;
-			
-// console.log("_EVENT_: "+event)
-
-			for (prop in modLib)
-			{
-				if(modLib.hasOwnProperty(prop))
-				{
-					mod = modLib[prop];
-
-					if (mod.events && mod.events[event]) 
-					{
-						asker 	  = mod.events.asker,
-						askerInst = modLib[asker].instance,
-						eventObj  = {	event 	: event,
-										data 	: eventObj.data,
-										asker 	: askerInst	 }
-
-						mod.events[event](eventObj);//trigger event and send to callback
-					}
-				}
-			}
-
-		},
 		cache: function(cachee, value) {
 			if (value) {
-				if (typeof cachee === "string") 
+				if (typeof cachee === "string")
 					cacheLib[cachee] = value
 			}
-			else if (typeof cachee === "string") 
+			else if (typeof cachee === "string")
 				return cacheLib[cachee]
 			
 			else if (typeof cachee === "object")
@@ -199,7 +193,19 @@ var Sandbox = (function() {
 					}
 				},
 				dispatch: function(eventObj, data) {
-					core.triggerEvent(eventObj, data)
+					var event;
+
+
+					if (typeof eventObj === "string")
+						event = eventObj
+					else if (typeof eventObj === "object")
+					{
+						event = eventObj.type					
+						data  = eventObj.data
+					}
+					// console.log(event)
+					// console.log(data)
+					core.triggerEvent(event, data)
 				},
 				cache: function(cachee, data) {
 					var returned = core.cache(cachee, data)

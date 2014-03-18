@@ -41,7 +41,7 @@ CORE.register('body:view/editor/start', function(sb) {
 
 		},
 		destroy: function() {
-			sb.ignore(['(body)view/master/cached','body'])
+			sb.ignore(['(body)view/master/cached','view/editor/loaded'])
 		},
 		stuff : function(event) {
 			$container = event.data
@@ -66,7 +66,7 @@ CORE.register('body:view/editor/keys', function(sb) {
 			this.disarmKeys
 		},
 		armKeys : function(event) {
-			self = event.asker
+			self = event.self
 			$container = $('#content')
 			$container.on("keydown", function(event) {
 				var key = event.which
@@ -92,8 +92,8 @@ CORE.register('body:view/editor/keys', function(sb) {
 
 				if (key == 8)
 				{	
-					self.enableKeys({asker:self})
 					sb.dispatch('view/editor/keys/delete')
+					self.enableKeys()
 				}
 			})
 		},
@@ -117,8 +117,11 @@ CORE.register('body:view/editor/keys', function(sb) {
 			init : function() {
 				sb.listen('view/editor/keys/delete', this.sendRequest)
 			},
+			destroy: function() {
+				sb.ignore('view/editor/keys/delete')
+			},
 			sendRequest : function(event) {
-				var self = event.asker
+				var self = event.self
 				sb.dispatch('view/editor/selection/get', self)
 			},
 			receiveSelectionObj : function(selectionObj) {
@@ -154,11 +157,10 @@ CORE.register('body:view/editor/keys', function(sb) {
 				sb.listen('view/editor/keys/enter', this.requestSelectionObj)
 			},
 			destroy: function() {
-				sb.ignore(['view/editor/selection/get'])
+				sb.ignore(['view/editor/keys/enter'])
 			},
 			requestSelectionObj : function(evt) {
-				console.log('yo')
-				var self = evt.asker
+				var self = evt.self
 				sb.dispatch('view/editor/selection/get', self)
 			},
 			receiveSelectionObj : function(selectionObj) {
@@ -297,7 +299,7 @@ CORE.register('body:view/editor/keys', function(sb) {
 			},
 			giveSelectionObj : function(event) {
 				var caller = event.data
-				self = event.asker
+				self = event.self
 
 				self.determineSelection(self)
 
