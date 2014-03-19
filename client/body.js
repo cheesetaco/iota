@@ -8,7 +8,6 @@ CORE.register('body', function() {
 			CORE.start('body:view/seeds/arm')
 			CORE.start('body:view/display')
 			CORE.start('body:view/render')
-			CORE.start('body:model/processDom')
 			
 			CORE.start('body:model/get')
 		},
@@ -17,7 +16,6 @@ CORE.register('body', function() {
 			CORE.stop('body:view/seeds/arm')
 			CORE.stop('body:view/display')
 			CORE.stop('body:view/render')
-			CORE.stop('body:model/processDom')
 			CORE.stop('body:model/get')			
 		}
 	}
@@ -73,6 +71,7 @@ CORE.register('body:model/get', function(sb) {
 			}
 		})
 	}
+	
 	return {
 		init: function() {
 			sb.listen({

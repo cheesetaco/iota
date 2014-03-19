@@ -506,7 +506,7 @@ function requestListener(request, response) {
 
 
 function generateID() {
-	var chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+	var chars = "1234567890abcdef",
 		list = chars.split(""),
 		ID = "";
 
