@@ -10,52 +10,72 @@ CORE.register("body:committer", function(sb) {
 			})
 		},
 		destroy : function() {
-			CORE.stop('body:committer/model/documents')
-			CORE.stop('body:committer/controller')			
+			CORE.stop('body:committer/model/upload')
+			CORE.stop('body:committer/model')
+			CORE.stop('body:committer/start')			
 		},
 		create : function() {
-			CORE.start('body:committer/model/documents')
-			CORE.start('body:committer/controller')
+			CORE.start('body:committer/model/upload')
+			CORE.start('body:committer/model')
+			CORE.start('body:committer/start')
 
 		}
 	}
 })
 
-CORE.register('body:committer/controller', function(sb) {
-	return {
-		init : function() {
-			sb.listen('(sidebar)view/buttons/commit/fired', this.postContainers)
-		},
-		destroy : function() {
-			sb.ignore('(sidebar)view/buttons/commit/fired')
-		},
-		postContainers : function() {
-			sb.listen('(body)model/master/container/post', function(evt) {
-			//master container
-				sb.dispatch('model/container-master/post', evt.data)
-			})
-			sb.dispatch('(body)model/master/container/get')
-			//commit container	
-			sb.dispatch('model/container-commit/post', sb.dom('#content'))
-		}
-	}
-})
-CORE.register('body:committer/model/documents', function(sb) {
-	var oldDoc, newDoc;
+CORE.register('body:committer/start', function(sb) {
+	var _master, _commit
 
 	return {
-		init : function() {
+		init: function() {
 			sb.listen({
-				'model/container-master/post' : this.processDom,
-				'model/container-commit/post' : this.processDom,
-				'model/documents/upload' : this.uploadDocuments
+				'(:body)model/post' 			: this.cacheModel,
+				'(body:committer)model/post' 	: this.cacheModel,
+
+				'(sidebar)view/buttons/commit/fired': function() {
+					sb.dispatch('(body:committer)model/get')
+					sb.dispatch('(:body)model/get')
+				}
 			})
 		},
 		destroy : function() {
-			sb.ignore('(sidebar)view/buttons/commit/fired')
+			sb.ignore([	
+				'(:body)model/post', 
+				'(body:committer)model/post', 
+				'(sidebar)view/buttons/commit/fired'
+			])
 		},
-		processDom : function(evt) {	
-			var blocks = evt.data[0].children,
+		cacheModel : function(evt) {
+			var event = evt.event,
+				cache = evt.data;
+			
+			if (event == '(:body)model/post')
+				_master = cache
+			else if (event == '(body:committer)model/post')
+				_commit = cache
+
+			if (_master && _commit)
+			{
+				var cacheObj = {
+					master : _master,
+					commit : _commit
+				}
+				sb.dispatch('(body:committer)model/both/cached', cacheObj)
+			}
+		}		
+	}
+})
+CORE.register('body:committer/model', function(sb) {
+
+	return {
+		init: function() {
+			sb.listen('(body:committer)model/get', this.getModel)
+		},
+		destroy: function() {
+			sb.ignore('(body:committer)model/get')
+		},
+		getModel : function() {
+			var blocks = sb.dom('#content')[0].children,
 				block, blockObj,
 				
 				cache = [];
@@ -63,7 +83,7 @@ CORE.register('body:committer/model/documents', function(sb) {
 			for (var i=0 ; i<blocks.length ; i++) 
 			{
 				block = blocks[i]
-				console.dir()
+
 				blockObj = {
 					id 		: block.getAttribute('data-id'),
 					content : block.innerHTML,
@@ -72,20 +92,23 @@ CORE.register('body:committer/model/documents', function(sb) {
 				cache.push(blockObj)
 			}
 
-			if (evt.event == 'model/container-commit/post')
-				newDoc = cache
-			else if (evt.event == 'model/container-master/post')
-				oldDoc = cache
-
-			if (oldDoc && newDoc)
-				sb.dispatch('model/documents/upload')
-		},
-		uploadDocuments : function() {
-			console.log(oldDoc)
-			console.log(newDoc)
-
+			sb.dispatch('(body:committer)model/post', cache)
 		}
 
 	}
-
 })
+CORE.register('body:committer/model/upload', function(sb) {
+	return {
+		init : function() {
+			sb.listen('(body:committer)model/both/cached', this.upload)
+		},
+		destroy : function() {
+			sb.ignore('(body:committer)model/both/cached')
+		},
+		upload : function(evt) {
+			console.log(evt)
+		}
+	}
+})
+
+

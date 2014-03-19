@@ -24,7 +24,7 @@ CORE.register('body:editor', function(sb) {
 			CORE.start('body:editor/view/keys/delete')
 			CORE.start('body:editor/view/keys')
 			
-			sb.dispatch('editor/view/loaded')
+			sb.dispatch('(body:editor)view/loaded')
 		}
 	}
 })
@@ -34,18 +34,14 @@ CORE.register('body:editor/model/container', function(sb) {
 	return {
 		init : function() {
 			sb.listen({
-				'editor/view/loaded' : this.shareContainer,
-				'(body)model/master/container/get' : this.globalDispatch
+				'(body:editor)view/loaded' : this.shareContainer
 			})
 		},
 		destroy : function() {
-			sb.ignore('editor/view/loaded')
+			sb.ignore('(body:editor)view/loaded')
 		},
 		shareContainer : function() {
-			sb.dispatch('model/container/post', sb.dom('#content'))
-		},
-		globalDispatch : function() {
-			sb.dispatch('(body)model/master/container/post', sb.dom('#content'))
+			sb.dispatch('(body:editor)model/container/post', sb.dom('#content'))
 		}
 	}
 })
@@ -54,12 +50,11 @@ CORE.register('body:editor/view/editable', function(sb) {
 
 	return {
 		init: function() {
-			sb.listen('model/container/post', this.stuff)
+			sb.listen('(body:editor)model/container/post', this.stuff)
 		},
 		destroy: function() {
-			console.log('destroyed')
 			this.unstuff()
-			sb.ignore(['model/container/post'])
+			sb.ignore(['(body:editor)model/container/post'])
 		},
 		stuff : function(event) {
 			$container = event.data
@@ -75,10 +70,10 @@ CORE.register('body:editor/view/keys', function(sb) {
 
 	return {
 		init : function() {
-			sb.listen('model/container/post', this.armKeys)
+			sb.listen('(body:editor)model/container/post', this.armKeys)
 		},
 		destroy : function() {
-			sb.ignore(['model/container/post'])
+			sb.ignore(['(body:editor)model/container/post'])
 			this.disarmKeys
 		},
 		armKeys : function(event) {
@@ -90,7 +85,7 @@ CORE.register('body:editor/view/keys', function(sb) {
 				{	
 					case 13 :
 						event.preventDefault()
-						sb.dispatch('editor/view/keys/enter')
+						sb.dispatch('(body:editor)view/keys/enter')
 						break
 					case 8 :
 						self.disableKeys()
@@ -108,7 +103,7 @@ CORE.register('body:editor/view/keys', function(sb) {
 
 				if (key == 8)
 				{	
-					sb.dispatch('editor/view/keys/delete')
+					sb.dispatch('(body:editor)view/keys/delete')
 					self.enableKeys()
 				}
 			})
@@ -131,14 +126,14 @@ CORE.register('body:editor/view/keys', function(sb) {
 
 		return {
 			init : function() {
-				sb.listen('editor/view/keys/delete', this.sendRequest)
+				sb.listen('(body:editor)view/keys/delete', this.sendRequest)
 			},
 			destroy: function() {
-				sb.ignore('editor/view/keys/delete')
+				sb.ignore('(body:editor)view/keys/delete')
 			},
 			sendRequest : function(event) {
 				var self = event.self
-				sb.dispatch('editor/view/selection/get', self)
+				sb.dispatch('(body:editor)view/selection/get', self)
 			},
 			receiveSelectionObj : function(selectionObj) {
 				this.checkIsBlankDocument(selectionObj)
@@ -170,14 +165,14 @@ CORE.register('body:editor/view/keys', function(sb) {
 
 		return {
 			init: function() {
-				sb.listen('editor/view/keys/enter', this.requestSelectionObj)
+				sb.listen('(body:editor)view/keys/enter', this.requestSelectionObj)
 			},
 			destroy: function() {
-				sb.ignore(['editor/view/keys/enter'])
+				sb.ignore(['(body:editor)view/keys/enter'])
 			},
 			requestSelectionObj : function(evt) {
 				var self = evt.self
-				sb.dispatch('editor/view/selection/get', self)
+				sb.dispatch('(body:editor)view/selection/get', self)
 			},
 			receiveSelectionObj : function(selectionObj) {
 				this.newLine(selectionObj)
@@ -308,10 +303,10 @@ CORE.register('body:editor/view/keys', function(sb) {
 	
 		return {
 			init: function() {
-				sb.listen('editor/view/selection/get', this.giveSelectionObj)
+				sb.listen('(body:editor)view/selection/get', this.giveSelectionObj)
 			},
 			destroy: function() {
-				sb.ignore(['editor/view/selection/get'])
+				sb.ignore(['(body:editor)view/selection/get'])
 			},
 			giveSelectionObj : function(event) {
 				var caller = event.data
