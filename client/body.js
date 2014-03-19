@@ -40,6 +40,7 @@ CORE.register('body:model/cache', function(sb) {
 				type: "model/blocks/cached",
 				data: response
 			})
+			console.log(response)
 		}
 
 	}

@@ -9,60 +9,76 @@ CORE.register('body:editor', function(sb) {
 			})
 		},
 		destroy : function() {
-			CORE.stop('body:view/editor/start')
-			CORE.stop('body:view/editor/selection')
-			CORE.stop('body:view/editor/keys/enter')
-			CORE.stop('body:view/editor/keys/delete')
-			CORE.stop('body:view/editor/keys')
+			CORE.stop('body:editor/model/container')
+			CORE.stop('body:editor/view/editable')
+			CORE.stop('body:editor/view/selection')
+			CORE.stop('body:editor/view/keys/enter')
+			CORE.stop('body:editor/view/keys/delete')
+			CORE.stop('body:editor/view/keys')
 		},
 		create : function() {
-			CORE.start('body:view/editor/start')
-			CORE.start('body:view/editor/selection')
-			CORE.start('body:view/editor/keys/enter')
-			CORE.start('body:view/editor/keys/delete')
-			CORE.start('body:view/editor/keys')
+			CORE.start('body:editor/model/container')
+			CORE.start('body:editor/view/editable')
+			CORE.start('body:editor/view/selection')
+			CORE.start('body:editor/view/keys/enter')
+			CORE.start('body:editor/view/keys/delete')
+			CORE.start('body:editor/view/keys')
 			
-			sb.dispatch('view/editor/loaded')
+			sb.dispatch('editor/view/loaded')
 		}
 	}
 })
 
-CORE.register('body:view/editor/start', function(sb) {
+CORE.register('body:editor/model/container', function(sb) {
+
+	return {
+		init : function() {
+			sb.listen({
+				'editor/view/loaded' : this.shareContainer,
+				'(body)model/master/container/get' : this.globalDispatch
+			})
+		},
+		destroy : function() {
+			sb.ignore('editor/view/loaded')
+		},
+		shareContainer : function() {
+			sb.dispatch('model/container/post', sb.dom('#content'))
+		},
+		globalDispatch : function() {
+			sb.dispatch('(body)model/master/container/post', sb.dom('#content'))
+		}
+	}
+})
+CORE.register('body:editor/view/editable', function(sb) {
 	var $container
 
 	return {
 		init: function() {
-			sb.listen({
-				'(body)view/master/cached' : this.stuff,
-				'view/editor/loaded': function() {
-					sb.dispatch('(body)view/master/cached', sb.dom('#content'))
-				}
-			})
-
+			sb.listen('model/container/post', this.stuff)
 		},
 		destroy: function() {
-			sb.ignore(['(body)view/master/cached','view/editor/loaded'])
+			console.log('destroyed')
+			this.unstuff()
+			sb.ignore(['model/container/post'])
 		},
 		stuff : function(event) {
 			$container = event.data
-
 			$container.attr('contenteditable', true)
 		},
 		unstuff : function() {
 			$container.attr('contenteditable', "false")
 		}
-
 	}
 })
-CORE.register('body:view/editor/keys', function(sb) {
+CORE.register('body:editor/view/keys', function(sb) {
 	var self, $container;
 
 	return {
 		init : function() {
-			sb.listen('(body)view/master/cached', this.armKeys)
+			sb.listen('model/container/post', this.armKeys)
 		},
 		destroy : function() {
-			sb.ignore(['(body)view/master/cached'])
+			sb.ignore(['model/container/post'])
 			this.disarmKeys
 		},
 		armKeys : function(event) {
@@ -74,7 +90,7 @@ CORE.register('body:view/editor/keys', function(sb) {
 				{	
 					case 13 :
 						event.preventDefault()
-						sb.dispatch('view/editor/keys/enter')
+						sb.dispatch('editor/view/keys/enter')
 						break
 					case 8 :
 						self.disableKeys()
@@ -92,7 +108,7 @@ CORE.register('body:view/editor/keys', function(sb) {
 
 				if (key == 8)
 				{	
-					sb.dispatch('view/editor/keys/delete')
+					sb.dispatch('editor/view/keys/delete')
 					self.enableKeys()
 				}
 			})
@@ -111,18 +127,18 @@ CORE.register('body:view/editor/keys', function(sb) {
 	}
 })
 
-	CORE.register('body:view/editor/keys/delete', function(sb) {
+	CORE.register('body:editor/view/keys/delete', function(sb) {
 
 		return {
 			init : function() {
-				sb.listen('view/editor/keys/delete', this.sendRequest)
+				sb.listen('editor/view/keys/delete', this.sendRequest)
 			},
 			destroy: function() {
-				sb.ignore('view/editor/keys/delete')
+				sb.ignore('editor/view/keys/delete')
 			},
 			sendRequest : function(event) {
 				var self = event.self
-				sb.dispatch('view/editor/selection/get', self)
+				sb.dispatch('editor/view/selection/get', self)
 			},
 			receiveSelectionObj : function(selectionObj) {
 				this.checkIsBlankDocument(selectionObj)
@@ -150,18 +166,18 @@ CORE.register('body:view/editor/keys', function(sb) {
 
 		}	
 	})
-	CORE.register('body:view/editor/keys/enter', function(sb) {
+	CORE.register('body:editor/view/keys/enter', function(sb) {
 
 		return {
 			init: function() {
-				sb.listen('view/editor/keys/enter', this.requestSelectionObj)
+				sb.listen('editor/view/keys/enter', this.requestSelectionObj)
 			},
 			destroy: function() {
-				sb.ignore(['view/editor/keys/enter'])
+				sb.ignore(['editor/view/keys/enter'])
 			},
 			requestSelectionObj : function(evt) {
 				var self = evt.self
-				sb.dispatch('view/editor/selection/get', self)
+				sb.dispatch('editor/view/selection/get', self)
 			},
 			receiveSelectionObj : function(selectionObj) {
 				this.newLine(selectionObj)
@@ -282,7 +298,7 @@ CORE.register('body:view/editor/keys', function(sb) {
 		}
 	})
 
-	CORE.register('body:view/editor/selection', function(sb) {
+	CORE.register('body:editor/view/selection', function(sb) {
 
 		var	self,
 			selectionObj,
@@ -292,10 +308,10 @@ CORE.register('body:view/editor/keys', function(sb) {
 	
 		return {
 			init: function() {
-				sb.listen('view/editor/selection/get', this.giveSelectionObj)
+				sb.listen('editor/view/selection/get', this.giveSelectionObj)
 			},
 			destroy: function() {
-				sb.ignore(['view/editor/selection/get'])
+				sb.ignore(['editor/view/selection/get'])
 			},
 			giveSelectionObj : function(event) {
 				var caller = event.data
