@@ -12,7 +12,6 @@ CORE.register('body:editor', function(sb) {
 			CORE.stop('body:editor:model/container')
 			CORE.stop('body:editor:model/selection/post')
 			CORE.stop('body:editor:view/keys/enter')
-			CORE.stop('body:editor:view/keys/delete/line')
 			CORE.stop('body:editor:view/keys/delete')
 			CORE.stop('body:editor:view/keys/arm')
 		},
@@ -20,9 +19,8 @@ CORE.register('body:editor', function(sb) {
 			CORE.start('body:editor:model/container')
 			CORE.start('body:editor:model/selection/post')
 			CORE.start('body:editor:view/keys/enter')
-			CORE.start('body:editor:view/keys/delete/line')
 			CORE.start('body:editor:view/keys/delete')
-			CORE.start('body:editor:view/keys')
+			CORE.start('body:editor:view/keys/arm')
 			
 			sb.dispatch('(body:editor)view/loaded')
 		}
@@ -64,7 +62,7 @@ CORE.register('body:editor:view/keys/arm', function(sb) {
 		},
 		destroy : function() {
 			sb.ignore(['(body:editor)model/container/post'])
-			this.disarmKeys
+			this.disarmKeys()
 		},
 
 		armKeys : function(event) {
@@ -76,6 +74,7 @@ CORE.register('body:editor:view/keys/arm', function(sb) {
 		},
 		disarmKeys : function() {
 			$container.off('keydown')
+			$container.off('keyup')
 		},
 
 		keysDisabled : false,
@@ -139,7 +138,7 @@ CORE.register('body:editor:model/selection/post', function(sb) {
 			data 	= {selection: s , range:range}
 
 			if (s.type == "Caret") 
-				sb.dispatch('(body:editor)/model/selection/post', data)
+				sb.dispatch('(body:editor)model/selection/post', data)
 			else if (s.type == "Range")
 				self.deleteSelection()
 		},
