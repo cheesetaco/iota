@@ -3,25 +3,33 @@
 // if selection : return content in selection
 "use strict"
 var selection = (function() {
+	var s = {}
 
 	return {
 		//----------------API------------------//
 
 		getSelection : function(optRange) {
 			var sel = this.constructSelection(optRange)
-			return sel
+			s = sel
+			return s
 		},
-		getContent : function(optRange) {
+		cutSelection : function(optRange) {
 			var s, range
 			
-			if (optRange) 
+			if (optRange)
 				s = this.getSelection(optRange)
 			else 
 				s = this.getSelection()
-			
-			range = this.constructRangeFromSelection(s)
 
+			range = this.extractSelection(s)
 			return range
+		},
+		deleteContent : function() {
+			if (!(s instanceof Selection)) {
+				this.getSelection()
+			}
+
+			s.deleteFromDocument()
 		},
 		//-----------dependencies--------------//
 
@@ -56,7 +64,7 @@ var selection = (function() {
 			s.endEl 	= this.determineParentNode(s.endNode)
 			s.startBlock	= this.determineBlock(s.startNode)
 			s.endBlock 		= this.determineBlock(s.endNode)
-			s.type 	= this.determineSelectionType(s)
+			s.scope 		= this.determineSelectionScope(s)
 			s.startBlock_firstNode 	= this.determineTextNode(s.startBlock, "first")
 			s.startBlock_lastNode 	= this.determineTextNode(s.startBlock, "last")
 			s.endBlock_firstNode 	= this.determineTextNode(s.endBlock, "first")
@@ -101,18 +109,18 @@ var selection = (function() {
 
 				return parentBlock
 			},
-			determineSelectionType : function(s) {
-				var type
+			determineSelectionScope : function(s) {
+				var scope
 				if (s.startNode === s.endNode && s.start == s.end) //no selection
-					type = "cursor"
+					scope = "cursor"
 				else if (s.startNode === s.endNode) 	//select confined to node
-					type = "node"
+					scope = "node"
 				else if (s.startBlock === s.endBlock) 	//select confined to block
-					type = "block"
+					scope = "block"
 				else 									//select spans multiple blocks
-					type = "document"	
+					scope = "document"	
 
-				return type
+				return scope
 			},
 			determineParentNode : function(node) {
 				if (node.parentNode.nodeName == "SEED")
@@ -138,7 +146,7 @@ var selection = (function() {
 			},
 
 
-		constructRangeFromSelection : function(s) {
+		extractSelection : function(s) {
 			var range = {
 				selection : s,
 				blocks 	: []
@@ -170,29 +178,33 @@ var selection = (function() {
 		},
 			nodeCrawl : function(focus, s) {
 				var string = "", length = 0,
-					content;
+					next, content;
 				
 				if (s.startNode === s.endNode)
 					 return this.extractInnerNode(s)
 
 				while ( focus && s.direction !== "up") 	//grab content
-				{	//end nodes
-					if (focus === s.startEl) {
+				{	
+					next = focus.nextSibling
+
+					//start node
+					if (focus === s.startEl) 
 						content = this.extractPartial(focus, s, "start")
-					}
-					else if (focus === s.endEl) {
+					//end node
+					else if (focus === s.endEl) 
 						content = this.extractPartial(s.endEl, s, "end")
-					}
-					//middle nodes
-					else {
+					//middle node(s)
+					else {			
 						content = this.extractFull(focus, s)
 					}
+					
 					string += content.str
 					length += content.len
 
-					if (focus === s.endEl) focus = false
-					else focus = focus.nextSibling
+					if (focus === s.endEl) 	focus = false
+					else 					focus = next
 				}
+	
 				return { inner:string , length:length } 
 			},
 			extractFull : function(node, s) {
@@ -205,10 +217,13 @@ var selection = (function() {
 					str = node.nodeValue
 					len = str.length
 				}
+				//cut
+				node.parentNode.removeChild(node)
+				//paste
 				return {str : str, len : len}
 			},
 			extractPartial : function(node, s, partial) {
-				var str, len
+				var str, len, cut, leftovers
 
 				if (node.nodeName == "#text")
 					node = node
@@ -218,26 +233,33 @@ var selection = (function() {
 				str = node.textContent
 
 				if (partial == "start") {
-					str = str.substr(s.start, node.length)				
-					len = node.length - s.start
+					cut 		= str.substr(s.start, node.length)
+					leftovers 	= str.substr(0, s.start)
+					len 		= node.length - s.start
 				}
 				else if (partial == "end") {
-					str = str.substr(0, s.end)
-					len = s.end
+					cut 		= str.substr(0, s.end)
+					leftovers 	= str.substr(s.end, node.length)
+					len 		= s.end
 				}
+				
+				node.textContent = leftovers
 
-				return { str:str , len:len }
+				return { str:cut , len:len }
 			},
 
 			extractInnerNode : function(s) {
-				var node = s.startNode, length, str, len;
+				var node = s.startNode, 
+				str, cut, len, leftovers;
 		
-				length = node.length
-				str = node.textContent
-				str = str.substring(s.start, s.end)
-				len = s.end - s.start
+				str 		= node.textContent
+				cut 		= str.substring(s.start, s.end)
+				leftovers 	= str.substring(0, s.start)
+				len 		= s.end - s.start
 				
-				return { inner:str , length:len }
+				node.textContent = leftovers
+
+				return { inner:cut , length:len }
 			},
 
 			getBlockID : function(blockNode) {

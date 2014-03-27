@@ -10,8 +10,6 @@ CORE.register('body:editor', function(sb) {
 		},
 		destroy : function() {
 			CORE.stop('body:editor/model/container')
-			CORE.stop('body:editor/view/selection/cache')
-			CORE.stop('body:editor/view/selection/rightofCursor')
 			CORE.stop('body:editor/view/keys/enter')
 			CORE.stop('body:editor/view/keys/delete/line')
 			CORE.stop('body:editor/view/keys/delete/blank')
@@ -19,8 +17,6 @@ CORE.register('body:editor', function(sb) {
 		},
 		create : function() {
 			CORE.start('body:editor/model/container')
-			CORE.start('body:editor/view/selection/cache')
-			CORE.start('body:editor/view/selection/rightofCursor')
 			CORE.start('body:editor/view/keys/enter')
 			CORE.start('body:editor/view/keys/delete/line')
 			CORE.start('body:editor/view/keys/delete/blank')
@@ -93,12 +89,7 @@ CORE.register('body:editor/view/keys', function(sb) {
 				switch (key) {	
 				case 13 :
 					event.preventDefault()
-
-					window.range = selection.getContent()
-					console.log(window.range.blocks)
-
-					// sb.dispatch('(body:editor)view/keys/enter')
-
+					sb.dispatch('(body:editor)view/keys/enter')
 				break
 				case 8 :
 					if (!self.keysDisabled) {
@@ -137,21 +128,32 @@ CORE.register('body:editor/view/keys', function(sb) {
 })
 
 CORE.register('body:editor/view/keys/enter', function(sb) {
-
+	var self, s, range;
 	return {
 		init: function() {
 			sb.listen({
-				'(body:editor)view/keys/enter' : this.newLine
+				'(body:editor)view/keys/enter' : this.getSelection
 			})
 		},
 		destroy: function() {
 			sb.ignore(['(body:editor)view/keys/enter'])
 		},
+		getSelection : function(evt) {
+			self 	= evt.self
+			s 		= selection.getSelection()
+			range 	= document.createRange()
+
+			if (s.type == "Caret") 
+				self.newLine()
+			else if (s.type == "Range")
+				self.deleteSelection()
+		},
+		deleteSelection : function() {
+			var ham = selection.cutSelection()
+			console.log(ham.blocks[0].innerHTML)
+		},
 		newLine : function(evt) {
-			var s 		= selection.getSelection(),
-				range 	= document.createRange(),
-				
-				blockEl = s.startBlock,
+			var	blockEl = s.startBlock,
 				node 	= s.startNode,
 				lastNode = s.endBlock_lastNode,
 				atEndOfBlock = (node === lastNode && s.start === lastNode.length),				
@@ -178,16 +180,22 @@ CORE.register('body:editor/view/keys/enter', function(sb) {
 					endNode : lastNode,
 					end : lastNode.length
 				}
-				content = selection.getContent(newRange)
+				content = selection.cutSelection(newRange)
+console.log(content)
 
 				block = content.blocks[0]
+				
 				$(blockEl).after(block)
-				range.setEnd(blockEl.nextSibling, 0)					
+				range.setEnd(blockEl.nextSibling, 0)
 			}
 
 			range.collapse(false) //send caret to end of range
 			s.removeAllRanges()
 			s.addRange(range) //select the range				
+		},
+		getContent : function(lastNode) {
+
+			return content
 		}
 
 	}
