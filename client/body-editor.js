@@ -176,12 +176,10 @@ CORE.register('body:editor/view/keys/enter', function(sb) {
 			else { // pressed enter somewhere in the middle of block text
 				var newRange, content
 
-				newRange = {
-					endNode : lastNode,
-					end : lastNode.length
-				}
+				newRange = { endNode : lastNode,
+							 end 	 : lastNode.length }
+							 
 				content = selection.cutSelection(newRange)
-console.log(content)
 
 				block = content.blocks[0]
 				
@@ -200,31 +198,6 @@ console.log(content)
 
 	}
 })
-
-					
-	CORE.register('body:editor/view/keys/delete/line', function(sb) {
-		var self, selectionObj;
-
-		return {
-			init : function() {
-				sb.listen({
-					'(body:editor)view/selection/post-delete'	: this.deleteLine,
-					'(body:editor)view/keys/delete/line'		: this.requestSelectionObj
-				})
-			},
-			destroy : function() {
-				sb.ignore(['(body:editor)view/keys/delete/line'])
-			},
-			requestSelectionObj : function(evt) {
-				self = evt.self
-				sb.dispatch('(body:editor)view/selection/get', 'delete')
-			},
-			deleteLine : function(evt) {
-				console.log(evt.data)
-
-			}
-		}
-	})
 
 	CORE.register('body:editor/view/keys/delete/blank', function(sb) {
 
@@ -258,5 +231,4 @@ console.log(content)
 
 		}	
 	})
-
 

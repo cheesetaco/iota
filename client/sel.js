@@ -147,27 +147,26 @@ var selection = (function() {
 
 
 		extractSelection : function(s) {
-			var range = {
+			var range, focusBlock
+
+			range = {
 				selection : s,
 				blocks 	: []
-			},
-			block, blockID, blockContent, focusNode, focusBlock;
-
+			}
 			focusBlock = s.startEl.parentNode
 
 			while (focusBlock)
 			{
-				block 	= document.createElement('block')
-				blockID = this.getBlockID(focusBlock)
-				block.setAttribute('data-id', blockID)
+				var block, content, focusNode
+				
 				//set next blocks focus node
-				if (range.blocks.length !== 0) 
+				if (range.blocks.length !== 0) //not first node
 					 focusNode = focusBlock.childNodes[0]
 				else focusNode = s.startEl
-				//grab content
-				blockContent 	= this.nodeCrawl(focusNode, s)
-				block.innerHTML = blockContent.inner
-
+				
+				content = this.nodeCrawl(focusNode, s)
+				block 	= this.createBlock(focusBlock, content)
+				
 				range.blocks.push(block)
 				
 				if (focusBlock === s.endBlock) focusBlock = false
@@ -176,6 +175,27 @@ var selection = (function() {
 
 			return range
 		},
+			createBlock : function (focusBlock, content) {
+				var	block, blockID, blockInnerLength, blockLength
+				
+				block = document.createElement('block')
+				//grab content
+				block.innerHTML = content.inner	
+				
+				//determine which block gets ID
+				blockInnerLength = content.length
+				blockLength 	 = this.getBlockLength(focusBlock)
+				
+				if (blockLength < blockInnerLength) 
+				{
+					blockID = this.getBlockID(focusBlock)
+					block.setAttribute('data-id', blockID)
+					focusBlock.removeAttribute('data-id')
+				}
+
+				return block
+			},
+
 			nodeCrawl : function(focus, s) {
 				var string = "", length = 0,
 					next, content;
@@ -204,7 +224,7 @@ var selection = (function() {
 					if (focus === s.endEl) 	focus = false
 					else 					focus = next
 				}
-	
+
 				return { inner:string , length:length } 
 			},
 			extractFull : function(node, s) {
@@ -261,7 +281,22 @@ var selection = (function() {
 
 				return { inner:cut , length:len }
 			},
+			getBlockLength : function(blockNode) {
+				var children = blockNode.childNodes,
+					length = 0
 
+				for (var i=0 ; i<children.length ; i++) 
+				{
+					var child = children[i]
+
+					if (child.nodeName == "SEED")
+						length += child.innerHTML.length
+					else if (child.nodeName == "#text")
+						length += child.length
+				}
+
+				return length
+			},
 			getBlockID : function(blockNode) {
 				var id
 				if (blockNode.nodeName === "BLOCK")
