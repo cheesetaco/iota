@@ -9,25 +9,27 @@ CORE.register('body:editor', function(sb) {
 			})
 		},
 		destroy : function() {
-			CORE.stop('body:editor/model/container')
-			CORE.stop('body:editor/view/keys/enter')
-			CORE.stop('body:editor/view/keys/delete/line')
-			CORE.stop('body:editor/view/keys/delete/blank')
-			CORE.stop('body:editor/view/keys')
+			CORE.stop('body:editor:model/container')
+			CORE.stop('body:editor:model/selection/post')
+			CORE.stop('body:editor:view/keys/enter')
+			CORE.stop('body:editor:view/keys/delete/line')
+			CORE.stop('body:editor:view/keys/delete')
+			CORE.stop('body:editor:view/keys/arm')
 		},
 		create : function() {
-			CORE.start('body:editor/model/container')
-			CORE.start('body:editor/view/keys/enter')
-			CORE.start('body:editor/view/keys/delete/line')
-			CORE.start('body:editor/view/keys/delete/blank')
-			CORE.start('body:editor/view/keys')
+			CORE.start('body:editor:model/container')
+			CORE.start('body:editor:model/selection/post')
+			CORE.start('body:editor:view/keys/enter')
+			CORE.start('body:editor:view/keys/delete/line')
+			CORE.start('body:editor:view/keys/delete')
+			CORE.start('body:editor:view/keys')
 			
 			sb.dispatch('(body:editor)view/loaded')
 		}
 	}
 })
 
-CORE.register('body:editor/model/container', function(sb) {
+CORE.register('body:editor:model/container', function(sb) {
 	var $container
 
 	return {
@@ -53,7 +55,7 @@ CORE.register('body:editor/model/container', function(sb) {
 	}
 })
 
-CORE.register('body:editor/view/keys', function(sb) {
+CORE.register('body:editor:view/keys/arm', function(sb) {
 	var self, $container;
 
 	return {
@@ -63,6 +65,17 @@ CORE.register('body:editor/view/keys', function(sb) {
 		destroy : function() {
 			sb.ignore(['(body:editor)model/container/post'])
 			this.disarmKeys
+		},
+
+		armKeys : function(event) {
+			self = event.self
+			$container = $('#content')
+
+			self.keydown()
+			self.keyup()
+		},
+		disarmKeys : function() {
+			$container.off('keydown')
 		},
 
 		keysDisabled : false,
@@ -75,14 +88,9 @@ CORE.register('body:editor/view/keys', function(sb) {
 		enableKeys : function() {
 			$container.off('keypress')
 			self.keysDisabled = false			
-		},		
-		
-		armKeys : function(event) {
-			self = event.self
-			$container = $('#content')
+		},
 
-			var keysDisabled = false
-
+		keydown : function() {
 			$container.on("keydown", function(event) {
 				var key = event.which
 
@@ -92,18 +100,13 @@ CORE.register('body:editor/view/keys', function(sb) {
 					sb.dispatch('(body:editor)view/keys/enter')
 				break
 				case 8 :
-					if (!self.keysDisabled) {
+					if (!self.keysDisabled)
 						self.disableKeys()
-						console.log('diablo')
-					}
-					//check if beginning of line
-					// if(getSelection().baseOffset == 0) {//takes a bit of processing power
-						// event.preventDefault()
-						// sb.dispatch('(body:editor)view/keys/delete/line')
-					// }
 				break
 				}
 			})
+		},
+		keyup : function() {
 			$container.on("keyup", function(event) {
 				var key = event.which
 
@@ -111,24 +114,14 @@ CORE.register('body:editor/view/keys', function(sb) {
 					sb.dispatch('(body:editor)view/keys/delete/blank')
 					self.enableKeys()
 				}
-			})
-
-			var myElement = document.getElementById('content');
-			myElement.onpaste = function(e) {
-				e.preventDefault()
-				console.log( e.clipboardData.getData('text/plain') )
-			}
-
-		},
-		disarmKeys : function() {
-			$container.off('keydown')
+			})		
 		}
 
 	}
 })
 
-CORE.register('body:editor/view/keys/enter', function(sb) {
-	var self, s, range;
+CORE.register('body:editor:model/selection/post', function(sb) {
+	var self, data;
 	return {
 		init: function() {
 			sb.listen({
@@ -139,20 +132,37 @@ CORE.register('body:editor/view/keys/enter', function(sb) {
 			sb.ignore(['(body:editor)view/keys/enter'])
 		},
 		getSelection : function(evt) {
+			var s, range
 			self 	= evt.self
 			s 		= selection.getSelection()
 			range 	= document.createRange()
+			data 	= {selection: s , range:range}
 
 			if (s.type == "Caret") 
-				self.newLine()
+				sb.dispatch('(body:editor)/model/selection/post', data)
 			else if (s.type == "Range")
 				self.deleteSelection()
 		},
 		deleteSelection : function() {
 			var ham = selection.cutSelection()
 			console.log(ham.blocks[0].innerHTML)
+		}
+
+	}
+})
+CORE.register('body:editor:view/keys/enter', function(sb){
+	var s, range
+	return {
+		init : function() {
+			sb.listen('(body:editor)model/selection/post', this.newLine)
+		},
+		destroy  : function() {
+			sb.ignore('(body:editor)model/selection/post')
 		},
 		newLine : function(evt) {
+			s = evt.data.selection
+			range = evt.data.range
+
 			var	blockEl = s.startBlock,
 				node 	= s.startNode,
 				lastNode = s.endBlock_lastNode,
@@ -178,7 +188,7 @@ CORE.register('body:editor/view/keys/enter', function(sb) {
 
 				newRange = { endNode : lastNode,
 							 end 	 : lastNode.length }
-							 
+
 				content = selection.cutSelection(newRange)
 
 				block = content.blocks[0]
@@ -190,16 +200,12 @@ CORE.register('body:editor/view/keys/enter', function(sb) {
 			range.collapse(false) //send caret to end of range
 			s.removeAllRanges()
 			s.addRange(range) //select the range				
-		},
-		getContent : function(lastNode) {
-
-			return content
-		}
+		}		
 
 	}
 })
 
-	CORE.register('body:editor/view/keys/delete/blank', function(sb) {
+	CORE.register('body:editor:view/keys/delete', function(sb) {
 
 		return {
 			init : function() {
@@ -215,7 +221,6 @@ CORE.register('body:editor/view/keys/enter', function(sb) {
 					container 	= $('#content')[0]
 
 				if (cursorNode == container) {
-					console.log('hi')
 					var	block 			 = document.createElement('block'),
 						documentFragment = "<br>";
 					block.innerHTML 	 = documentFragment

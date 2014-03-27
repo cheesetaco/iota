@@ -10,32 +10,28 @@ CORE.register("body:committer", function(sb) {
 			})
 		},
 		destroy : function() {
-			CORE.stop('body:committer/model/upload')
-			CORE.stop('body:committer/model')
-			CORE.stop('body:committer/start')			
+			CORE.stop('body:committer:model/upload')
+			CORE.stop('body:committer:model/post')
+			CORE.stop('body:committer:start')			
 		},
 		create : function() {
-			CORE.start('body:committer/model/upload')
-			CORE.start('body:committer/model')
-			CORE.start('body:committer/start')
+			CORE.start('body:committer:model/upload')
+			CORE.start('body:committer:model/post')
+			CORE.start('body:committer:start')
 
 		}
 	}
 })
 
-CORE.register('body:committer/start', function(sb) {
+CORE.register('body:committer:start', function(sb) {
 	var _master, _commit
 
 	return {
 		init: function() {
 			sb.listen({
-				'(:body)model/post' 			: this.cacheModel,
-				'(body:committer)model/post' 	: this.cacheModel,
-
-				'(sidebar)view/buttons/commit/fired': function() {
-					sb.dispatch('(body:committer)model/get')
-					sb.dispatch('(:body)model/get')
-				}
+				'(:body)model/post' 			: this.postModels,
+				'(body:committer)model/post' 	: this.postModels,
+				'(sidebar)view/buttons/commit/fired': this.requestModels
 			})
 		},
 		destroy : function() {
@@ -45,7 +41,11 @@ CORE.register('body:committer/start', function(sb) {
 				'(sidebar)view/buttons/commit/fired'
 			])
 		},
-		cacheModel : function(evt) {
+		requestModels : function() {
+			sb.dispatch('(body:committer)model/get')
+			sb.dispatch('(:body)model/get')
+		},
+		postModels : function(evt) {
 			var event = evt.event,
 				cache = evt.data;
 			
@@ -60,12 +60,12 @@ CORE.register('body:committer/start', function(sb) {
 					master : _master,
 					commit : _commit
 				}
-				sb.dispatch('(body:committer)model/both/cached', cacheObj)
+				sb.dispatch('(body:committer)model/body/versions/post', cacheObj)
 			}
 		}		
 	}
 })
-CORE.register('body:committer/model', function(sb) {
+CORE.register('body:committer:model/post', function(sb) {
 
 	return {
 		init: function() {
@@ -97,13 +97,13 @@ CORE.register('body:committer/model', function(sb) {
 
 	}
 })
-CORE.register('body:committer/model/upload', function(sb) {
+CORE.register('body:committer:model/upload', function(sb) {
 	return {
 		init : function() {
-			sb.listen('(body:committer)model/both/cached', this.upload)
+			sb.listen('(body:committer)model/body/versions/post', this.upload)
 		},
 		destroy : function() {
-			sb.ignore('(body:committer)model/both/cached')
+			sb.ignore('(body:committer)model/body/versions/post')
 		},
 		upload : function(evt) {
 			console.log(evt)

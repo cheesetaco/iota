@@ -4,26 +4,26 @@
 CORE.register('body', function() {
 	return {
 		init : function() {
-			CORE.start('body:model/cache')
+			CORE.start('body:model/post')
 			CORE.start('body:view/seeds/arm')
 			CORE.start('body:view/display')
 			CORE.start('body:view/render')
 			
-			CORE.start('body:model/get')
+			CORE.start('body:model/download')
 		},
 		destroy: function() {
-			CORE.stop('body:model/cache')
+			CORE.stop('body:model/post')
 			CORE.stop('body:view/seeds/arm')
 			CORE.stop('body:view/display')
 			CORE.stop('body:view/render')
-			CORE.stop('body:model/get')			
+			CORE.stop('body:model/download')			
 		}
 	}
 })
 
 
 //MODEL
-CORE.register('body:model/cache', function(sb) {
+CORE.register('body:model/post', function(sb) {
 	var model
 
 	return {
@@ -51,7 +51,7 @@ CORE.register('body:model/cache', function(sb) {
 	}
 })
 
-CORE.register('body:model/get', function(sb) {
+CORE.register('body:model/download', function(sb) {
 
 	var pathTree,
 
@@ -93,7 +93,7 @@ CORE.register('body:view/seeds/arm', function(sb) {
 		init: function() {
 			sb.listen({
 				'(router)pathTree/cached' 		 : this.getPathTree,
-				'(body)view/blocks/displayed'			 : this.armSeeds,
+				'(body)view/blocks/displayed'	 : this.armSeeds,
 				'(sidebar)view/buttons/edit/on'  : this.disarmSeeds,
 				'(sidebar)view/buttons/edit/off' : this.armSeeds
 			})
@@ -141,10 +141,8 @@ CORE.register('body:view/display', function(sb) {
 	}
 })
 CORE.register('body:view/render', function(sb) {
-	// console.log(sb)
 	var blocksArray = [],
 		lastClicked;
-
 
 	return {
 		init : function() {
