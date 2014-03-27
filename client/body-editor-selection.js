@@ -1,29 +1,34 @@
+
+
+
 	CORE.register('body:editor/view/selection/rightofCursor', function(sb) {
-		var self;
+		var self, selectionObj;
 
 		return {
 			init : function() {
 				sb.listen({
-					'(body:editor)view/selection/toRight/get' : this.returnNodes,
+					'(body:editor)view/selection/toRight/get' : this.returnNodes
 				})
 			},
 			destroy : function() {
 				sb.ignore(['(body:editor)view/selection/toRight/get'])
 			},
 			returnNodes : function(evt) {
-				var	selectionObj, nodes;
-				
 				self = evt.self
-				selectionObj = evt.data
-				nodes = self.nodesRightOfCursor(selectionObj)
+				selectionObj = evt.data;
+				
+				var	nodes = self.nodesRightOfCursor(selectionObj)
+				selectionObj.nodesToRight = nodes
 
-				sb.dispatch('(body:editor)view/selection/toRight/post', nodes)
+				sb.dispatch('(body:editor)view/selection/toRight/post', selectionObj)
 			},
+
 			nodesRightOfCursor : function(selectionObj) {
-				var cursorNode 		= selectionObj.cursorNode, 
-					cursorPosition 	= selectionObj.cursorPosition, 
-					endofNode 		= selectionObj.endofNode, 
-					lastTextNode	= selectionObj.lastTextNode,
+				var sel = selectionObj,
+					cursorNode 		= sel.cursorNode, 
+					cursorPosition 	= sel.cursorPosition, 
+					endofNode 		= sel.endofNode, 
+					lastTextNode	= sel.lastTextNode,
 				//grab the remainder of the paragraph following the cursor
 					documentFragment 	= cursorNode.textContent.slice( cursorPosition, endofNode ),
 					startSlice 		 	= 0,
@@ -35,7 +40,7 @@
 				//there are other nodes right of cursor
 				if (cursorNode !== lastTextNode)
 				{	
-					var nextNode = self.checkForSibling(cursorNode)
+					var nextNode 	 = self.checkForSibling(cursorNode)
 					documentFragment = self.crawlSiblings(nextNode, documentFragment)
 				}
 
@@ -59,11 +64,12 @@
 					if (cursorNode.parentNode.nextSibling !== null)
 						nextNode = cursorNode.parentNode.nextSibling
 				}
-				console.log(nextNode)
+// console.log(nextNode)
 				return nextNode
 			},			
 			crawlSiblings : function(focusNode, documentFragment)
 			{
+console.log(focusNode)
 				var workingFragment = documentFragment
 				var hasSibling = true;
 
@@ -103,7 +109,8 @@
 
 	CORE.register('body:editor/view/selection/cache', function(sb) {
 
-		var	self,
+		var	recipient,
+			self,
 			selectionObj,
 			range,
 			userSelection, selectionStart, selectionEnd,
@@ -112,51 +119,49 @@
 		return {
 			init: function() {
 				sb.listen({
-					'(body:editor)view/selection/cache' : this.determineSelection,
-					'(body:editor)view/selection/get' : this.postSelection
+					'(body:editor)view/selection/toRight/post' : this.postSelection,
+					'(body:editor)view/selection/get' 	: this.determineSelection
 				})
 			},
 			destroy: function() {
 				sb.ignore(['(body:editor)view/selection/get'])
 			},
 			postSelection : function(evt) {
-				if (selectionObj)
-				{	
-					var recipient = evt.data,
+				if (evt && evt.data)
+					selectionObj = evt.data
+				if (selectionObj) {
 					event = '(body:editor)view/selection/post-'+recipient;
-				
-				console.log(event)
-				sb.dispatch(event, selectionObj)
+console.log(event)
+					sb.dispatch(event, selectionObj)
 				}
 			},
+
 			determineSelection: function(evt) {
-				self = evt.self,
-				selectionObj,
+				self = evt.self
 				//retrieve selection info
+				recipient = evt.data
+
 				range = document.createRange()
 				userSelection = window.getSelection()
-				selectionStart = userSelection.baseOffset
-				selectionEnd = userSelection.extentOffset
-				selectionStartNode = userSelection.baseNode
-				selectionEndNode = userSelection.extentNode
+				selectionStart 		= userSelection.baseOffset
+				selectionEnd 		= userSelection.extentOffset
+				selectionStartNode 	= userSelection.baseNode
+				selectionEndNode 	= userSelection.extentNode
 
 				//nothing is selected
-				if ( selectionStart === selectionEnd && 
-					 selectionStartNode === selectionEndNode )
-				{
-					//define selectionObj
-					selectionObj = self.noSelection(self)					
-				}
+				if ( selectionStart === selectionEnd && selectionStartNode === selectionEndNode )
+					self.noSelection(self)
+
 			},
 			//blinking caret
 			noSelection : function(self) {
 				var cursorPosition 	= selectionStart,
 					cursorNode 		= selectionStartNode,
-					endofNode		= cursorNode.length,
+					endofNode 		= cursorNode.length,
 					cursorBlock 	= self.determineParentBlock(cursorNode),
 					lastNode 	 	= cursorBlock.childNodes[cursorBlock.childNodes.length-1],
 					lastTextNode 	= self.determineChildNode(lastNode),
-					endofLastNode
+					endofLastNode;
 
 				if (lastNode.nodeName !== "BR")
 					endofLastNode 	= lastTextNode.length;
@@ -166,9 +171,9 @@
 					lastTextNode 	= cursorNode
 				}
 				range.setStart(cursorNode, cursorPosition)
-				range.setEnd(lastTextNode, endofLastNode)
+				range.setEnd(cursorNode, endofNode)
 
-				return {
+				selectionObj = {
 					range 			: range,
 					userSelection	: userSelection,
 					cursorPosition	: cursorPosition,
@@ -178,6 +183,10 @@
 					lastTextNode 	: lastTextNode,
 					endofLastNode 	: endofLastNode
 				}
+				if (cursorPosition !== 0 && !(cursorPosition == endofNode && cursorNode === lastTextNode) )//in the middle
+					sb.dispatch('(body:editor)view/selection/toRight/get', selectionObj)
+				else
+					self.postSelection()			
 			},
 
 			determineParentBlock : function(cursorNode) {
@@ -191,7 +200,6 @@
 
 				else if (cursorNode.parentNode.nodeName == "SEED")
 					cursorBlock = cursorNode.parentNode.parentNode
-				
 
 				return cursorBlock
 			},

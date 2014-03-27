@@ -118,7 +118,7 @@ var dom;
 				attr = style.getPropertyValue(attribute)
 			}
 
-				return attr
+			return attr
 		},
 
 

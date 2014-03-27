@@ -99,8 +99,8 @@ CORE.register('body:view/seeds/arm', function(sb) {
 			})
 		},
 		destroy: function() {
-			sb.ignore['(router)pathTree/cached','(body)view/blocks/displayed','view/edit/on','view/edit/off']
 			this.disarmSeeds()
+			sb.ignore['(router)pathTree/cached','(body)view/blocks/displayed','view/edit/on','view/edit/off']
 		},
 		getPathTree: function() {
 			pathTree = sb.cache('pathTree')
