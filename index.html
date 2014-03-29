@@ -57,6 +57,8 @@ block {
 }
 #commitButton {
 	float: right;
+	border: 1px solid #AAA;
+	color: #777;
 }
 #editButton:hover { 
 	border: 1px solid #AAA;
@@ -66,6 +68,12 @@ block {
 	border: 1px solid #F64;
 	color: white;
 	background-color: #ED6327	
+}
+#commitWarning {
+	position: absolute;
+	top : 35px;
+	right : 0;
+	font-size: 10px;
 }
 
 [contenteditable="true"]:active,
@@ -90,6 +98,7 @@ block {
 <div id="edit">
 	<div id="editButton">edit</div>
 	<div id="commitButton" style="display: none; opacity: 0">Commit</div>
+	<div id="commitWarning" style="display: none; opacity: 0">This will change the document for everyone</div>
 </div>
 
 <script src="http://localhost:8080/lib/jquery.js"></script>

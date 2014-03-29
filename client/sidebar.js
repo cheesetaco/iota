@@ -77,7 +77,8 @@ CORE.register('sidebar:view/buttons/edit/arm', function(sb) {
 	}
 })
 CORE.register('sidebar:view/buttons/commit/arm', function(sb) {
-	var	$commitButton = $('#commitButton');
+	var	$commitButton = $('#commitButton'),
+		$commitWarning = $('#commitWarning');
 
 	return {
 		init: function() {
@@ -94,10 +95,23 @@ CORE.register('sidebar:view/buttons/commit/arm', function(sb) {
 			$commitButton.on('click', function() {
 				sb.dispatch('(sidebar)view/buttons/commit/fired')
 			})
+
+			$commitButton.on('mouseover', function() {
+				$commitWarning.css('display', 'block')
+				$commitWarning.animate({'opacity' : 1}, 300)
+			})
+			$commitButton.on('mouseout', function() {
+				$commitWarning.animate({'opacity' : 0}, 300, function() {
+					$commitWarning.css('display', 'none')
+				})
+			})
 		},
 		disarmCommitButton : function() {
 			$commitButton.off('click')
+			$commitButton.off('mouseover')
+			$commitButton.off('mouseout')
 		},
+
 		funcss : function() {
 			$commitButton.css('display', 'block')
 			$commitButton.animate({'opacity' : 1}, 500)
