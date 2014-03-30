@@ -31,7 +31,7 @@ exports.CORE = (function () {
 			if (mod.instance) {
 				mod.instance.destroy()
 				mod.instance = null
-				console.log("stopped: "+moduleID)
+				// console.log("stopped: "+moduleID)
 			}
 		},
 		startAll : function() {
@@ -175,28 +175,43 @@ var Sandbox = (function() {
 					// console.log(data)
 					core.triggerEvent(event, data)
 				},
-				convertToObjectOfArrays : function(arrayofObjects) {
+				util : {
+					convertToObjectOfArrays : function(arrayofObjects) {
 
-				},
-				convertToArrayOfObjects : function(objectofArrays) {
-					var array = [], 
-						count = 0;
-					
-					for (var prop in objectofArrays) 
-					{
-						var arr = objectofArrays[prop]
-						if (arr instanceof Array)
+					},
+					convertToArrayOfObjects : function(objectofArrays) {
+						var array = [], 
+							count = 0;
+						
+						for (var prop in objectofArrays) 
 						{
-							for (var i=0 ; i<arr.length ; i++)
+							var arr = objectofArrays[prop]
+							if (arr instanceof Array)
 							{
-								if (!array[i])
-									array[i] = {}
+								for (var i=0 ; i<arr.length ; i++)
+								{
+									if (!array[i])
+										array[i] = {}
 
-								array[i][prop] = arr[i]
+									array[i][prop] = arr[i]
+								}
 							}
 						}
+						return array
+					},
+					generateID : function() {
+						var chars = "1234567890abcdef",
+							list = chars.split(""),
+							ID = "",
+							int, rand;
+
+						for (int=0 ; int<7 ; int++)
+						{
+							rand = Math.floor(Math.random() * 16);
+							ID += list[rand]
+						}
+						return ID;
 					}
-					return array
 				}
 			}
 

@@ -31,9 +31,9 @@ CORE.register('neo:query', function(sb) {
 			db.cypherQuery(query, function(err, result) 
 			{
 				if(err) throw err;
-console.log(" query	|  "+query)
-console.log(" result	|  "+result.data)
-console.log(" ")
+// console.log(" query	|  "+query)
+// console.log(" result	|  "+result.data)
+// console.log(" ")
 
 				if (result.data[0]!==undefined)
 					sb.dispatch(event, result.data)

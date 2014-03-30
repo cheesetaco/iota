@@ -78,8 +78,8 @@ CORE.register('body:loader:response/blocks', function(sb) {
 			var sqlRows = evt.data.rows,
 
 			send = {
-				blocks 	: 	[],
-				ids 	: 	[],
+				content : 	[],
+				id 		: 	[],
 				parentID: 	currentNodeID
 			},
 			neoContent,
@@ -88,16 +88,16 @@ CORE.register('body:loader:response/blocks', function(sb) {
 			for (i=0 ; i<sqlRows.length ; i++)
 			{
 				sqlID = sqlRows[i].id
-				send.ids.push(sqlID)
+				send.id.push(sqlID)
 			}
 			//display in the right order -- fucking sql
 			for (i=0 ; i<neoIDs.length ; i++)
 			{
 				neoContent 	= neoIDs[i]
-				num 		= send.ids.indexOf(neoContent)
+				num 		= send.id.indexOf(neoContent)
 				sqlContent 	= sqlRows[num].content 
 				
-				send.blocks.push(sqlContent)
+				send.content.push(sqlContent)
 			}
 
 			sb.dispatch('(router)respond', send);

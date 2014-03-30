@@ -38,4 +38,5 @@ CORE.start('body:loader')
 CORE.start('body:committer')
 
 CORE.start('server')
+console.log('serving on port 8080')
 

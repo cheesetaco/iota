@@ -155,12 +155,12 @@ CORE.register('body:view/render', function(sb) {
 		},
 		renderBody : function(evtObj) {
 			var response = evtObj.data,
-				blocks 	 = response.blocks,
-				ids 	 = response.ids;
+				content  = response.content,
+				id 		 = response.id;
 
-			for (var i=0 ; i<blocks.length ; i++)
+			for (var i=0 ; i<content.length ; i++)
 			{
-				var temp = "<block data-id='" +ids[i]+ "'>" +blocks[i]+ "</block>"
+				var temp = "<block data-id='" +id[i]+ "'>" +content[i]+ "</block>"
 				blocksArray.push(temp)
 			}
 

@@ -211,6 +211,36 @@ var Sandbox = (function() {
 					var returned = core.cache(cachee, data)
 					if (returned)
 						return returned
+				},
+				utils : {
+					quotesToSingle : function(string) {
+						var string = string.split(""),
+							// singles = [],
+							doubles = [],
+							i, char, atPos;
+
+						for (i=0 ; i<string.length ; i++)
+						{
+							char = string[i]
+							// if (char == "'")
+							// 	singles.push(i)
+							if (char == '"')
+								doubles.push(i)
+						}
+						// //replace singles
+						// for (i=0 ; i<singles.length ; i++)
+						// {
+						// 	atPos = singles[i]
+						// 	string[atPos] = '"'
+						// }
+						//replace doubles
+						for (i=0 ; i<doubles.length ; i++)
+						{
+							atPos = doubles[i]
+							string[atPos] = "'"
+						}						
+						return string.join("")
+					}
 				}
 			}
 		}

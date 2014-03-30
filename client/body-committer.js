@@ -79,21 +79,20 @@ CORE.register('body:committer:model/post', function(sb) {
 		},
 		getModel : function() {
 			var model = sb.dom('#content')[0].children,
-				block, cache,
-				
-				blocks	= [],
-				ids 	= [],
+				block, blockContent, cache, 
+				content	= [],
+				id 		= [],
 				sort 	= [];
 
 			for (var i=0 ; i<model.length ; i++) 
 			{
 				block = model[i]
-
-				blocks.push(block.innerHTML)
-				ids.push(block.getAttribute('data-id'))
+				blockContent = sb.utils.quotesToSingle(block.innerHTML)
+				content.push(blockContent)
+				id.push(block.getAttribute('data-id'))
 				sort.push(i+1)
 			}
-			cache = {blocks:blocks , ids:ids , sort:sort}
+			cache = {content:content , id:id , sort:sort}
 
 			sb.dispatch('(body:committer)model/post', cache)
 		}
@@ -104,7 +103,7 @@ CORE.register('body:committer:model/upload', function(sb) {
 	
 	var request = function(evt) {
 		var data = evt.data
-		
+
 		$.ajax({
 			url: '/?commitChanges',
 			type: "POST",

@@ -36,9 +36,10 @@ CORE.register('sql/query', function(sb) {
 			connection.query(query, function (err, rows, fields) 
 			{
 				if (err) throw err;
-console.log(" query	| "+query)
-console.log(rows)
-console.log(" ")
+// console.log(" query	| "+query)
+// console.log(" result | ...")
+// console.log(rows)
+// console.log(" 	  ...")
 
 				var obj = {rows:rows, data:data}
 				if (rows)
