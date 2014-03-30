@@ -18,22 +18,24 @@ CORE.register('server', function(sb) {
 			}).listen(8080)
 		},
 		destroy : function() {
-
+			//http.stopServer()
 		}
 	}
 })
 
 require('./server/utils.js')
-require('./server/router.js');
+require('./server/router.js')
 require('./server/neo.js')
 require('./server/sql.js')
-require('./server/body-loader.js');
+require('./server/body-loader.js')
+require('./server/body-committer.js')
 
 CORE.start('utils')
 CORE.start('router')
 CORE.start('neo')
 CORE.start('sql')
 CORE.start('body:loader')
+CORE.start('body:committer')
 
 CORE.start('server')
 

@@ -2,26 +2,35 @@ var	CORE = require('./core.js').CORE,
 	mime = require('mime');
 
 CORE.register('router', function(sb) {
+	var self, reqObj, request, response, 
+		location, MIMEtype,
+		getChildren, commitChanges;
 
 	return {
 		init : function() {
-			sb.listen('(server)request', this.route)
+			sb.listen({
+				'(server)request' : this.define,
+				'(router)respond' : this.respond
+			})
 		},
 		destroy : function() {
 			sb.ignore('(server)request')
 		},
-		route : function(evt) {
-			var reqObj = evt.data,
-				request  = reqObj.req,
-				response = reqObj.res,
+		define : function(evt) {
+			self = evt.self
 
-				
-				location = request.url,
-				MIMEtype = mime.lookup(location),
-				getChildren 	= location.match(/\/\?getChildren\??.*/),
-				commitChanges 	= location.match(/\/\?commitChanges/);
+			reqObj = evt.data
+			request  = reqObj.req
+			response = reqObj.res
+			
+			location = request.url
+			MIMEtype = mime.lookup(location)
+			getChildren 	= location.match(/\/\?getChildren\??.*/)
+			commitChanges 	= location.match(/\/\?commitChanges/)
 
-
+			self.router()
+		},
+		router : function() {
 			if (MIMEtype !== "application/javascript") 
 			{
 				console.log("	location 	|	" +location)
@@ -31,11 +40,11 @@ CORE.register('router', function(sb) {
 
 			if (getChildren) 
 			{	
-				sb.dispatch('(router)body/get', reqObj)
+				this.request('(body:loader)blocks/get')
 			}
 			else if (commitChanges) 
 			{	
-				sb.dispatch('(router)body/update', reqObj)
+				this.request('(router)blocks/commit')
 			}
 			else if (MIMEtype == "application/javascript")
 			{
@@ -53,7 +62,20 @@ CORE.register('router', function(sb) {
 
 				sb.dispatch('(router)file/load', data)
 			}
+		},
+		request : function(event) {
+			response.writeHead(200, {"Content-Type": "text/json"})
+
+			request.on('data', function(data) {
+				data = JSON.parse(data)
+				sb.dispatch(event, data)
+			})
+		},
+		respond : function(evt) {
+			var data = JSON.stringify(evt.data)
+			response.end(data)
 		}
 	
 	}
 })
+

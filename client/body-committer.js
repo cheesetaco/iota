@@ -56,10 +56,13 @@ CORE.register('body:committer:start', function(sb) {
 
 			if (_master && _commit)
 			{
+
 				var cacheObj = {
 					master : _master,
 					commit : _commit
 				}
+				_commit = null
+				
 				sb.dispatch('(body:committer)model/body/versions/post', cacheObj)
 			}
 		}		
@@ -75,22 +78,22 @@ CORE.register('body:committer:model/post', function(sb) {
 			sb.ignore('(body:committer)model/get')
 		},
 		getModel : function() {
-			var blocks = sb.dom('#content')[0].children,
-				block, blockObj,
+			var model = sb.dom('#content')[0].children,
+				block, cache,
 				
-				cache = [];
+				blocks	= [],
+				ids 	= [],
+				sort 	= [];
 
-			for (var i=0 ; i<blocks.length ; i++) 
+			for (var i=0 ; i<model.length ; i++) 
 			{
-				block = blocks[i]
+				block = model[i]
 
-				blockObj = {
-					id 		: block.getAttribute('data-id'),
-					content : block.innerHTML,
-					sort 	: i+1
-				}
-				cache.push(blockObj)
+				blocks.push(block.innerHTML)
+				ids.push(block.getAttribute('data-id'))
+				sort.push(i+1)
 			}
+			cache = {blocks:blocks , ids:ids , sort:sort}
 
 			sb.dispatch('(body:committer)model/post', cache)
 		}
@@ -98,15 +101,31 @@ CORE.register('body:committer:model/post', function(sb) {
 	}
 })
 CORE.register('body:committer:model/upload', function(sb) {
+	
+	var request = function(evt) {
+		var data = evt.data
+		
+		$.ajax({
+			url: '/?commitChanges',
+			type: "POST",
+			dataType: "json",
+			data: JSON.stringify(data),//send as a Buffer? so node can read it
+			success: function(response) {
+				console.log(response)
+				// sb.dispatch({
+				// 	type: '(body)request/blocks/done',
+				// 	data: response
+				// })
+			}
+		})
+	}
+
 	return {
 		init : function() {
-			sb.listen('(body:committer)model/body/versions/post', this.upload)
+			sb.listen('(body:committer)model/body/versions/post', request)
 		},
 		destroy : function() {
 			sb.ignore('(body:committer)model/body/versions/post')
-		},
-		upload : function(evt) {
-			console.log(evt)
 		}
 	}
 })

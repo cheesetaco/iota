@@ -5,23 +5,23 @@ CORE.register('neo', function() {
 	return {
 		init : function() {
 			CORE.start('neo/currentNodeID')
-			CORE.start('neo/query')
+			CORE.start('neo:query')
 		},
 		destroy : function() {
 			CORE.stop('neo/currentNodeID')
-			CORE.stop('neo/query')
+			CORE.stop('neo:query')
 		}
 	}
 })
 
-CORE.register('neo/query', function(sb) {
+CORE.register('neo:query', function(sb) {
 
 	return {
 		init : function() {
-			sb.listen('neo/query', this.query)
+			sb.listen('(neo)query', this.query)
 		},
 		destroy : function() {
-			sb.ignore('neo/query')
+			sb.ignore('(neo)query')
 		},
 		query : function(evt) {
 			var query = evt.data.query,
@@ -48,10 +48,10 @@ console.log(" ")
 CORE.register('neo/currentNodeID', function(sb) {
 	return {
 		init : function() {
-			sb.listen('neo/currentNodeID/get', this.currentNodeID)
+			sb.listen('(neo)currentNodeID/get', this.currentNodeID)
 		},
 		destroy : function() {
-			sb.ignore('neo/currentNodeID/get')
+			sb.ignore('(neo)currentNodeID/get')
 		},
 		currentNodeID : function(evt) {
 			var parentNodes = evt.data,
@@ -71,7 +71,7 @@ CORE.register('neo/currentNodeID', function(sb) {
 				}
 			}
 
-			sb.dispatch('neo/query', { query:query , event:'neo/currentNodeID/post'})
+			sb.dispatch('(neo)query', { query:query , event:'(neo)currentNodeID/post'})
 		}
 	}
 })

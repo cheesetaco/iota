@@ -54,10 +54,10 @@ console.log(" ")
 CORE.register('sql/blocks/get', function(sb) {
 	return {
 		init: function() {
-			sb.listen('neo/blockIDs/post', this.getBlocks)
+			sb.listen('(neo)blocks/ids/post', this.getBlocks)
 		},
 		destroy : function() {
-			sb.ignore('neo/blockIDs/post')
+			sb.ignore('(neo)blocks/ids/post')
 		},
 		getBlocks : function(evt) {
 			var blockIDlist = evt.data,

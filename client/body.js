@@ -43,7 +43,7 @@ CORE.register('body:model/post', function(sb) {
 			model = eventObj.data;
 
 			sb.dispatch({
-				type: "(body)model/cached",
+				type: '(body)model/cached',
 				data: model
 			})
 		}

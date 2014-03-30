@@ -174,6 +174,29 @@ var Sandbox = (function() {
 					// console.log(event)
 					// console.log(data)
 					core.triggerEvent(event, data)
+				},
+				convertToObjectOfArrays : function(arrayofObjects) {
+
+				},
+				convertToArrayOfObjects : function(objectofArrays) {
+					var array = [], 
+						count = 0;
+					
+					for (var prop in objectofArrays) 
+					{
+						var arr = objectofArrays[prop]
+						if (arr instanceof Array)
+						{
+							for (var i=0 ; i<arr.length ; i++)
+							{
+								if (!array[i])
+									array[i] = {}
+
+								array[i][prop] = arr[i]
+							}
+						}
+					}
+					return array
 				}
 			}
 

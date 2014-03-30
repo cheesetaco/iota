@@ -92,7 +92,7 @@ CORE.register('sidebar:view/buttons/commit/arm', function(sb) {
 			sb.ignore(["(sidebar)view/buttons/edit/on","(sidebar)view/buttons/edit/off"])
 		},
 		armCommitButton : function() {
-			$commitButton.on('click', function() {
+			$commitButton.on('mouseup', function() {
 				sb.dispatch('(sidebar)view/buttons/commit/fired')
 			})
 
@@ -107,7 +107,7 @@ CORE.register('sidebar:view/buttons/commit/arm', function(sb) {
 			})
 		},
 		disarmCommitButton : function() {
-			$commitButton.off('click')
+			$commitButton.off('mouseup')
 			$commitButton.off('mouseover')
 			$commitButton.off('mouseout')
 		},
