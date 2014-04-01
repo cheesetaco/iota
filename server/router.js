@@ -33,9 +33,9 @@ CORE.register('router', function(sb) {
 		router : function() {
 			if (MIMEtype !== "application/javascript") 
 			{
-				// console.log("	location 	|	" +location)
-				// console.log("	type     	|	" +MIMEtype)
-				// console.log("")
+				console.log("	location 	|	" +location)
+				console.log("	type     	|	" +MIMEtype)
+				console.log("")
 			}
 
 			if (getChildren) 

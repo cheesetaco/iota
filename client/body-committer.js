@@ -29,27 +29,27 @@ CORE.register('body:committer:start', function(sb) {
 	return {
 		init: function() {
 			sb.listen({
-				'(:body)model/post' 			: this.postModels,
+				'(:body)model/post[committer]' 	: this.postModels,
 				'(body:committer)model/post' 	: this.postModels,
 				'(sidebar)view/buttons/commit/fired': this.requestModels
 			})
 		},
 		destroy : function() {
 			sb.ignore([	
-				'(:body)model/post', 
+				'(:body)model/post[committer]', 
 				'(body:committer)model/post', 
 				'(sidebar)view/buttons/commit/fired'
 			])
 		},
 		requestModels : function() {
 			sb.dispatch('(body:committer)model/get')
-			sb.dispatch('(:body)model/get')
+			sb.dispatch('(:body)model/get', {event:"[committer]"})
 		},
 		postModels : function(evt) {
 			var event = evt.event,
 				cache = evt.data;
 			
-			if (event == '(:body)model/post')
+			if (event == '(:body)model/post[committer]')
 				_master = cache
 			else if (event == '(body:committer)model/post')
 				_commit = cache
@@ -87,7 +87,8 @@ CORE.register('body:committer:model/post', function(sb) {
 			for (var i=0 ; i<model.length ; i++) 
 			{
 				block = model[i]
-				blockContent = sb.utils.quotesToSingle(block.innerHTML)
+				blockContent = block.innerHTML
+				
 				content.push(blockContent)
 				id.push(block.getAttribute('data-id'))
 				sort.push(i+1)

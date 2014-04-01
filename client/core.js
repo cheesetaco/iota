@@ -240,8 +240,28 @@ var Sandbox = (function() {
 							string[atPos] = "'"
 						}						
 						return string.join("")
+					},
+					getBlockID : function(block) {
+						var attrs = block.attributes,
+
+						prop, blockID
+						for (var prop in attrs)
+						{
+							if (attrs[prop].name == 'data-id')
+								blockID = attrs[prop].value
+						}
+						return blockID
+					},
+					determineParentNode : function(node) {
+						if (node.parentNode.nodeName == "SEED")
+							return node.parentNode
+						else if (node.parentNode.nodeName == "BLOCK")
+							return node
+						else if (node.nodeName == "BLOCK") //"<block><br></block>"
+							return node.childNodes[0]
 					}
 				}
+
 			}
 		}
 	}

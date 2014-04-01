@@ -54,7 +54,7 @@ CORE.register('body:loader:blocks/ids', function(sb) {
 	}
 })
 CORE.register('body:loader:response/blocks', function(sb) {
-	var currentNodeID, neoIDs;
+	var currentNodeID, neoIdArr;
 	return {
 		init : function() {
 			sb.listen({
@@ -71,36 +71,53 @@ CORE.register('body:loader:response/blocks', function(sb) {
 			currentNodeID = evt.data
 		},
 		cacheNeoIDs : function(evt) {
-			neoIDs = evt.data
+			neoIdArr = evt.data
 		},
 
 		sendBlocks : function(evt) {
-			var sqlRows = evt.data.rows,
+			var self = evt.self,
+				sqlRows = evt.data.rows,
+			
+			blocks = self.rearrangeShit(sqlRows),
 
-			send = {
-				content : 	[],
-				id 		: 	[],
-				parentID: 	currentNodeID
-			},
-			neoContent,
-			sqlID, sqlContent, num, i;
+			packet = {
+				content 	: blocks.content,
+				id 			: blocks.id,
+				parentID 	: currentNodeID
+			};
 
-			for (i=0 ; i<sqlRows.length ; i++)
+			sb.dispatch('(router)respond', packet);
+		},
+
+		rearrangeShit: function(sqlRows) {
+			var sqlIdArr = [],
+			
+			i, id;
+
+			for (i=0 ; i<sqlRows.length ; i++) 
 			{
-				sqlID = sqlRows[i].id
-				send.id.push(sqlID)
-			}
-			//display in the right order -- fucking sql
-			for (i=0 ; i<neoIDs.length ; i++)
+				id = sqlRows[i].id
+				sqlIdArr.push(id)
+			} 
+
+			var content = [],
+				id 		= [],
+			
+			i, correctlyOrderedID, adjustedIndex, _cont, _id;
+
+			for (i=0 ; i<neoIdArr.length ; i++)
 			{
-				neoContent 	= neoIDs[i]
-				num 		= send.id.indexOf(neoContent)
-				sqlContent 	= sqlRows[num].content 
+				correctlyOrderedID 	= neoIdArr[i]
+				adjustedIndex 		= sqlIdArr.indexOf(correctlyOrderedID)
 				
-				send.content.push(sqlContent)
+				_cont = sqlRows[adjustedIndex].content
+				_id   = sqlRows[adjustedIndex].id
+
+				content.push(_cont)
+				id.push(_id)
 			}
 
-			sb.dispatch('(router)respond', send);
+			return {content: content, id:id}
 		}
 
 	}

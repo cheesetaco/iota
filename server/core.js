@@ -211,7 +211,11 @@ var Sandbox = (function() {
 							ID += list[rand]
 						}
 						return ID;
-					}
+					},
+					escapeSpecials : function(string) {
+						string = string.replace(/(['"\\])/g, "\\$1")
+						return string
+					}					
 				}
 			}
 
