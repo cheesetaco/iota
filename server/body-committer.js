@@ -42,7 +42,7 @@ CORE.register('body:committer/list/diff', function(sb) {
 			commitIDs = evt.data.commit.id
 			var lists = self.diffVersions()
 console.log(lists)
-			// sb.dispatch('(body:committer)versions/diff/lists/post', lists)			
+			sb.dispatch('(body:committer)versions/diff/lists/post', lists)			
 		},
 
 		diffVersions : function() {
@@ -73,6 +73,7 @@ console.log(lists)
 			for (i=0 ; i<commitIDs.length ; i++)
 			{
 				var commitID = commitIDs[i],
+				//m = master, c = commit
 					mPos 	= masterIDs.indexOf(commitID),
 					cPos 	= i,
 					cBlock = commit[cPos],
@@ -135,7 +136,7 @@ CORE.register('body:committer/queries', function(sb) {
 			self  = evt.self
 			var	lists = evt.data,
 				q = self.constructQueries(lists);
-
+// console.log(lists)
 			// send SQL?
 			if (q.sql_insert)
 				sb.dispatch('sql/query', {query:q.sql_insert})
@@ -145,7 +146,7 @@ CORE.register('body:committer/queries', function(sb) {
 				sb.dispatch('sql/query', {query:q.sql_delete})
 			// send NEO?
 			if (q.neoQ) {
-console.log(q.neoQ)				
+// console.log(q.neoQ)				
 				sb.dispatch('(neo)query', {query:q.neoQ})
 			}
 		},

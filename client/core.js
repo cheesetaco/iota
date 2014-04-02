@@ -252,6 +252,12 @@ var Sandbox = (function() {
 						}
 						return blockID
 					},
+					determineParentBlock : function(node) {
+						if (node.parentNode.nodeName == "SEED")
+							return node.parentNode.parentNode
+						else if (node.parentNode.nodeName == "BLOCK")
+							return node.parentNode
+					},					
 					determineParentNode : function(node) {
 						if (node.parentNode.nodeName == "SEED")
 							return node.parentNode

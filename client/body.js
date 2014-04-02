@@ -37,19 +37,19 @@ CORE.register('body:model/post', function(sb) {
 			sb.ignore(['(body)request/blocks/done'])
 		},
 		globalPost : function(evt) {
-			var returnEvent = '(:body)model/post['+evt.data.event+']'
+			var returnEvent = '(:body)model/post'+evt.data.event
 
 			sb.dispatch(returnEvent, model)
 		},
 		cacheResponse_body : function(eventObj) {
 			model = eventObj.data;
+			var sort = []
 			for (var i=0 ; i<model.id.length ; i++)
 			{
-				var sort = []
 				sort.push(i+1)
-				model.sort = sort
 			}
-console.log(model)
+			model.sort = sort
+// console.log(model)
 			sb.dispatch({
 				type: '(body)model/cached',
 				data: model

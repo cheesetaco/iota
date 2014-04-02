@@ -30,7 +30,7 @@ CORE.register('body:committer:start', function(sb) {
 		init: function() {
 			sb.listen({
 				'(:body)model/post[committer]' 	: this.postModels,
-				'(body:committer)model/post' 	: this.postModels,
+				'(body:committer)model/post'	: this.postModels,
 				'(sidebar)view/buttons/commit/fired': this.requestModels
 			})
 		},
@@ -62,7 +62,7 @@ CORE.register('body:committer:start', function(sb) {
 					commit : _commit
 				}
 				_commit = null
-				
+console.log('dawg')
 				sb.dispatch('(body:committer)model/body/versions/post', cacheObj)
 			}
 		}		

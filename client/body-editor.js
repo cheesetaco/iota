@@ -112,6 +112,10 @@ CORE.register('body:editor:view/keys/arm', function(sb) {
 					if (!self.keysDisabled)
 						self.disableKeys()
 				break
+				case 9 : 
+					event.preventDefault()
+					console.log('tab')
+				break
 				}
 			})
 		},
@@ -130,12 +134,14 @@ CORE.register('body:editor:view/keys/arm', function(sb) {
 	}
 })
 CORE.register('body:editor:view/keys/delete', function(sb) {
-	var self, sel, master;
+	var self, s, range, master,
+		eater, eaten, eatenID;
+
 	return {
 		init: function() {
 			sb.listen({
 				'(:body)model/post[delete]' : this.cacheMaster,
-				'(body:editor)view/keys/delete' : this.whatAction
+				'(body:editor)view/keys/delete' : this.rangeOrCaret
 			})
 			sb.dispatch('(:body)model/get', {event:"delete"})
 		},
@@ -145,117 +151,126 @@ CORE.register('body:editor:view/keys/delete', function(sb) {
 		cacheMaster : function(evt) {
 			master = evt.data
 		},
-		whatAction : function(evt) {
+
+		rangeOrCaret : function(evt) {
 			self = evt.self
-			sel = window.getSelection()
-			var parentBlock = self.getParentBlock(sel.baseNode),
-			parentID = sb.utils.getBlockID(parentBlock);
-
-			//pressed delete at start of block
-			if (sel.type == 'Caret' && sel.baseOffset == 0) {
-				self.mergeBlocks(parentID)
-			}
-			// else if (sel.type == 'Range')
-			// 	sb.dispatch("(body:editor)view/keys/delete/checkBlockIsBlank", data)
-
-
+			s = window.getSelection()
+			
+			var cursorAtStart = (s.baseOffset == 0)
+			if (s.type == "Caret" && cursorAtStart)
+				self.Caret()
+			else if (s.type == "Range" && !cursorAtStart)
+				self.Range()
+			//else let DOM do its default delete
 		},
-		mergeBlocks : function(parentID) {
-			var s = window.getSelection(),
-				range = document.createRange(),
+			Range : function() {
+				self.doesEatenHaveIDToBeConserved()
+			},
+			Caret : function() {	
+				self.doesEatenHaveIDToBeConserved()
+			},
+			doesEatenHaveIDToBeConserved : function() {
+				var	eatenBlock = sb.utils.determineParentBlock(s.baseNode);
+				console.dir(eatenBlock)// if (eatenBlock)
+				eatenID	= sb.utils.getBlockID(eatenBlock)
 
-			// if (parentID) {
-				blockHolder = document.createElement('BLOCKHOLDER');
-				blockHolder.setAttribute('contenteditable', 'false')
-				blockHolder.setAttribute('data-id', parentID)
-			// }
-
-			window.setTimeout(function() {//wait 1 ms to reference the correct selection
-				var parentNode = self.getParentNode(s.baseNode),
-					siblingNode = parentNode.nextSibling;
-				
-				//Manipulate DOM based on what DOM is trying to merge
-				if (parentNode.nodeName == "#text" && siblingNode && siblingNode.nodeName == "#text")
+				if (eatenID) self.doesEaterHaveIDToBeConserved()
+			},
+			doesEaterHaveIDToBeConserved : function() {
+				window.setTimeout(function() //wait 1 ms to reference the correct selection
 				{
-					var twinNode2 = self.splitMergedTextNodes(s)
-					self.insertSplitNodesAndBlockHolder(s, twinNode2, blockHolder)
-				}
-				else
-					self.justInsertBlockHolder(s, blockHolder)
+					var eaterBlock = sb.utils.determineParentBlock(s.baseNode),
+						eaterBlockID = sb.utils.getBlockID(eaterBlock);
 
-				//fix cursor position
-				range.setEnd(s.baseNode, s.baseNode.length)
-				range.collapse(false) //send caret to end of range
-				s.removeAllRanges()//?
-				s.addRange(range) //select the range	
-			}, 1) 
-		},
-			splitMergedTextNodes : function(s) {
-				var siamese = s.baseNode.textContent,
-				twin1 = siamese.substring(0, s.baseOffset),
-				twin2 = siamese.substring(s.baseOffset, siamese.length),
-				twinNode2 = document.createTextNode(twin2)
-				s.baseNode.textContent = twin1				
+					if (!eaterBlockID)
+						self.eaterEatEatenID(eaterBlock)
+					else
+						console.log('I have an ID')
+				}, 1) 
+			},
+			eaterEatEatenID : function(eaterBlock) {
+				eaterBlock.setAttribute('data-id', eatenID)
+			},
 
-				return twinNode2
-			},
-			insertSplitNodesAndBlockHolder : function(s, twinNode2, blockHolder) {
-				//put nodes and BLOCKHOLDER in the DOM
-				parentBlock = self.getParentBlock(s.baseNode);
-				parentBlock.insertBefore(blockHolder, s.baseNode.nextSibling)
-				parentBlock.insertBefore(twinNode2, blockHolder.nextSibling)
-			},
-			justInsertBlockHolder : function(s, blockHolder) {
-				var parentBlock = self.getParentBlock(s.baseNode),
-					parentNode = self.getParentNode(s.baseNode),
-					sibling = parentNode.nextSibling
-console.log(parentNode)
-				parentBlock.insertBefore(blockHolder, sibling)
-			},
-			determineNodeType: function(node) {
-				if (node) {
-					if (node.parentNode.nodeName == "BLOCK")
-						return "#text"
-					else if (node.parentNode.nodeName == "SEED")
-						return "seed"
-				}
-			},
-		checkRangeIsStart : function() {
-			var extentBlock = self.getParentBlock(sel.extentNode),
-				baseBlock 	= self.getParentBlock(sel.baseNode),
-				extentBlockFirstNode = extentBlock.childNodes[0],
-				baseBlockFirstNode 	 = baseBlock.childNodes[0],
 
-				extentAtBeginning = (sel.extentOffset==0 && sel.extentNode === extentBlockFirstNode),
-				baseAtBeginning   = (sel.baseOffset==0 && sel.baseNode === baseBlockFirstNode);
+		//______________________for merging blocks when they both have IDs______________________________
+		// 	caret : function() {
 
-			if (extentAtBeginning)
-				return {
-					event: "checkBlockIsBlank", 
-					block: extentBlock
-				}
-			else if (baseAtBeginning)
-				return {
-					event: "checkBlockIsBlank", 
-					block: baseBlock
-				}				
-			else 
-				return "you dont need to know"
-		},
-		getParentBlock : function(node) {
-			if (node.parentNode.nodeName == "SEED")
-				return node.parentNode.parentNode
-			else if (node.parentNode.nodeName == "BLOCK")
-				return node.parentNode
-		},
-		getParentNode : function(node) {
-			if (node.parentNode.nodeName == "SEED")
-				return node.parentNode
-			else if (node.parentNode.nodeName == "BLOCK")
-				return node
-			else if (node.nodeName == "BLOCK") //"<block><br></block>"
-				return node.childNodes[0]			
-		}
+		// 		var blockHolder = document.createElement('BLOCKHOLDER');
+		// 		blockHolder.setAttribute('contenteditable', 'false')
+		// 		blockHolder.setAttribute('data-id', eatenID)
+
+		// 		window.setTimeout(function() {//wait 1 ms to reference the correct selection
+					
+		// 			self.seedOrText(blockHolder)//insert BlockHolder and/or break up textNodes
+
+		// 			self.resetCursor(s.baseNode, s.baseNode.length)
+
+		// 		}, 1) 
+		// 	},
+		// 		seedOrText : function(blockHolder) {
+		// 			var parentBlock, eater, eaterIsSeed, eaten, eatenIsSeed, bothNodesAreText;
+					
+		// 			eater = sb.utils.determineParentNode(s.baseNode)
+		// 			eaten = eater.nextSibling
+		// if(eaten) { eatenIsSeed = (eaten.nodeName == "SEED") }
+		// 			eaterIsSeed = (eater.nodeName == "SEED")
+					
+		// 			bothNodesAreText = (!eaterIsSeed && !eatenIsSeed)
+		// 			parentBlock = sb.utils.determineParentBlock(eater)
+
+		// 			if (bothNodesAreText)
+		// 				self.text(eater, parentBlock, blockHolder)
+		// 			else
+		// 				self.seed(eater, parentBlock, blockHolder, eaten)
+		// 		},
+		// 			text : function(eater, parentBlock, blockHolder) {
+		// 				var siamese = eater.textContent,
+		// 					twin1 = siamese.substring(0, s.baseOffset),
+		// 					twin2 = siamese.substring(s.baseOffset, siamese.length),
+		// 					twinNode2 = document.createTextNode(twin2);
+
+		// 				eater.textContent = twin1				
+		// 				parentBlock.insertBefore(blockHolder, eater.nextSibling)
+		// 				parentBlock.insertBefore(twinNode2, blockHolder.nextSibling)
+		// 			},
+		// 			seed : function(eater, parentBlock, blockHolder, eaten) {
+		// 				parentBlock.insertBefore(blockHolder, eaten)
+		// 			},
+		// 	//________end caret________________________________________________
+
+		// checkRangeIsStart : function() {
+		// 	var extentBlock = sb.utils.determineParentBlock(sel.extentNode),
+		// 		baseBlock 	= sb.utils.determineParentBlock(sel.baseNode),
+		// 		extentBlockFirstNode = extentBlock.childNodes[0],
+		// 		baseBlockFirstNode 	 = baseBlock.childNodes[0],
+
+		// 		extentAtBeginning = (sel.extentOffset==0 && sel.extentNode === extentBlockFirstNode),
+		// 		baseAtBeginning   = (sel.baseOffset==0 && sel.baseNode === baseBlockFirstNode);
+
+		// 	if (extentAtBeginning)
+		// 		return {
+		// 			event: "checkBlockIsBlank", 
+		// 			block: extentBlock
+		// 		}
+		// 	else if (baseAtBeginning)
+		// 		return {
+		// 			event: "checkBlockIsBlank", 
+		// 			block: baseBlock
+		// 		}				
+		// 	else 
+		// 		return "you dont need to know"
+		// },
+
+
+		// resetCursor : function(node, offset) {
+		// 	range.setEnd(node, offset)
+
+		// 	range.collapse(false) //send caret to end of range
+		// 	s.removeAllRanges()//?
+		// 	s.addRange(range) //select the range	
+		// },		
+
 
 	}
 })
@@ -420,26 +435,3 @@ CORE.register('body:editor:view/keys/enter', function(sb){
 
 		}	
 	})
-
-
-// CORE.register("body:editor:view/keys/delete/deleteCharacter", function(sb) {
-// 	return {
-// 		init: function() {
-// 			sb.listen("(body:editor)view/keys/delete/deleteCharacter", this.deleteCharacter)
-// 		},
-// 		deleteCharacter : function(evt) {
-// 			var sel = evt.data.sel,
-// 				event = evt.data.event,
-// 				range = document.createRange(),
-// 				node = sel.baseNode,
-// 				str  = node.textContent,
-// 				string = str.substring(0,str.length-1)
-// // console.log(sel)
-// 			node.textContent = string
-// 			range.setEnd(node, str.length-1)
-// 			range.collapse(false) //send caret to end of range
-// 			sel.removeAllRanges()
-// 			sel.addRange(range) //select the range			
-// 		}
-// 	}
-// })
