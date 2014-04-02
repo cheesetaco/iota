@@ -1,5 +1,7 @@
 "use strict"
-
+//----------------------------------------------------------------\
+// this file is fucked because the selection API is absolute shit |
+//----------------------------------------------------------------/
 CORE.register('body:editor', function(sb) {
 	return {
 		init: function() {
@@ -12,9 +14,6 @@ CORE.register('body:editor', function(sb) {
 			CORE.stop('body:editor:model/container')
 			CORE.stop('body:editor:model/selection/post')
 			CORE.stop('body:editor:view/keys/enter')
-			// CORE.stop("body:editor:view/keys/delete/deleteCharacter")
-			CORE.stop('body:editor:view/keys/delete/mergeBlocks')
-			CORE.stop('body:editor:view/keys/delete/checkBlockIsBlank')
 			CORE.stop('body:editor:view/keys/delete')
 			CORE.stop('body:editor:view/keys/delete/preventBlankDocument')
 			CORE.stop('body:editor:view/keys/arm')
@@ -23,9 +22,6 @@ CORE.register('body:editor', function(sb) {
 			CORE.start('body:editor:model/container')
 			CORE.start('body:editor:model/selection/post')
 			CORE.start('body:editor:view/keys/enter')
-			// CORE.start("body:editor:view/keys/delete/deleteCharacter")
-			CORE.start('body:editor:view/keys/delete/mergeBlocks')
-			CORE.start('body:editor:view/keys/delete/checkBlockIsBlank')
 			CORE.start('body:editor:view/keys/delete')
 			CORE.start('body:editor:view/keys/delete/preventBlankDocument')
 			CORE.start('body:editor:view/keys/arm')
@@ -130,6 +126,94 @@ CORE.register('body:editor:view/keys/arm', function(sb) {
 				}
 			})		
 		}
+
+	}
+})
+CORE.register('')
+
+
+
+CORE.register('body:editor:model/selection/post', function(sb) {
+	var self, data;
+	return {
+		init: function() {
+			sb.listen({
+				'(body:editor)view/keys/enter' : this.getSelection
+			})
+		},
+		destroy: function() {
+			sb.ignore(['(body:editor)view/keys/enter'])
+		},
+		getSelection : function(evt) {
+			var s, range
+			self 	= evt.self
+			s 		= selection.getSelection()
+			range 	= document.createRange()
+			data 	= {selection: s , range:range}
+
+			if (s.type == "Caret") 
+				sb.dispatch('(body:editor)model/selection/post', data)
+			else if (s.type == "Range")
+				self.deleteSelection()
+		},
+		deleteSelection : function() {
+			var ham = selection.cutSelection()
+			console.log(ham.blocks[0].innerHTML)
+		}
+
+	}
+})
+CORE.register('body:editor:view/keys/enter', function(sb){
+	var s, range
+	return {
+		init : function() {
+			sb.listen('(body:editor)model/selection/post', this.newLine)
+		},
+		destroy  : function() {
+			sb.ignore('(body:editor)model/selection/post')
+		},
+		newLine : function(evt) {
+			s = evt.data.selection
+			range = evt.data.range
+
+			var	blockEl = s.startBlock,
+				node 	= s.startNode,
+				lastNode = s.endBlock_lastNode,
+				atEndOfBlock = (node === lastNode && s.start === lastNode.length),				
+
+				block = document.createElement("block"),
+				documentFragment = "<br>";
+
+			if (s.start == 0) {		
+				block.innerHTML = documentFragment
+				
+				$(s.startBlock).before(block)
+				range.setEnd(node, s.start) //recallibrate range to include new block
+			}
+			else if (atEndOfBlock) {
+				block.innerHTML = documentFragment
+				
+				$(blockEl).after(block)
+				range.setEnd(blockEl.nextSibling, 0)
+			}
+			else { // pressed enter somewhere in the middle of block text
+				var newRange, content
+
+				newRange = { endNode : lastNode,
+							 end 	 : lastNode.length }
+
+				content = selection.cutSelection(newRange)
+
+				block = content.blocks[0]
+				
+				$(blockEl).after(block)
+				range.setEnd(blockEl.nextSibling, 0)
+			}
+
+			range.collapse(false) //send caret to end of range
+			s.removeAllRanges()
+			s.addRange(range) //select the range				
+		}		
 
 	}
 })
@@ -274,164 +358,34 @@ CORE.register('body:editor:view/keys/delete', function(sb) {
 
 	}
 })
-CORE.register('body:editor:view/keys/delete/mergeBlocks', function(sb) {
-	return {
-		init: function() {
-			sb.listen('(body:editor)view/keys/delete/mergeBlocks', this.createBlockHolder)
-		},
-		destroy : function() {
-			sb.ignore('(body:editor)view/keys/delete/mergeBlocks')
-		},
+CORE.register('body:editor:view/keys/delete/preventBlankDocument', function(sb) {
 
-
-	}
-})
-
-
-CORE.register('body:editor:view/keys/delete/checkBlockIsBlank', function(sb) {
-	return {
-		init: function() {
-			sb.listen('(body:editor)view/keys/delete/checkBlockIsBlank', this.checkBlockIsBlank)
-		},
-		destroy : function() {
-			sb.ignore('(body:editor)view/keys/delete/checkBlockIsBlank')
-		},
-		checkBlockIsBlank : function(evt) {
-
-// console.log(block)
-		},
-// 		checkBlockIsBlank : function(block) {
-// console.log(master)
-// 			var blockID = self.getBlockID(block),
-// 				posOfBlockInMaster = function() {
-// 					for (var i=0 ; i<master.id.length ; i++)
-// 					{
-// 						if (master.id[i] == blockID)
-// 							return i
-// 					}
-				
-// 				};
-
-
-// 		},
-
-
-	}
-})
-
-CORE.register('body:editor:model/selection/post', function(sb) {
-	var self, data;
-	return {
-		init: function() {
-			sb.listen({
-				'(body:editor)view/keys/enter' : this.getSelection
-			})
-		},
-		destroy: function() {
-			sb.ignore(['(body:editor)view/keys/enter'])
-		},
-		getSelection : function(evt) {
-			var s, range
-			self 	= evt.self
-			s 		= selection.getSelection()
-			range 	= document.createRange()
-			data 	= {selection: s , range:range}
-
-			if (s.type == "Caret") 
-				sb.dispatch('(body:editor)model/selection/post', data)
-			else if (s.type == "Range")
-				self.deleteSelection()
-		},
-		deleteSelection : function() {
-			var ham = selection.cutSelection()
-			console.log(ham.blocks[0].innerHTML)
-		}
-
-	}
-})
-CORE.register('body:editor:view/keys/enter', function(sb){
-	var s, range
 	return {
 		init : function() {
-			sb.listen('(body:editor)model/selection/post', this.newLine)
+			sb.listen('(body:editor)view/keys/delete/blank', this.checkIsBlankDocument)
 		},
-		destroy  : function() {
-			sb.ignore('(body:editor)model/selection/post')
+		destroy: function() {
+			sb.ignore('(body:editor)view/keys/delete')
 		},
-		newLine : function(evt) {
-			s = evt.data.selection
-			range = evt.data.range
+		checkIsBlankDocument : function (evt) {
+			var sel 	= window.getSelection(),
+				range 	= document.createRange(),
+				cursorNode 	= sel.baseNode,
+				container 	= $('#content')[0]
 
-			var	blockEl = s.startBlock,
-				node 	= s.startNode,
-				lastNode = s.endBlock_lastNode,
-				atEndOfBlock = (node === lastNode && s.start === lastNode.length),				
+			if (cursorNode == container) {
+				var	block 			 = document.createElement('block'),
+					documentFragment = "<br>";
+				block.innerHTML 	 = documentFragment
 
-				block = document.createElement("block"),
-				documentFragment = "<br>";
-
-			if (s.start == 0) {		
-				block.innerHTML = documentFragment
+				$(container).append(block)
 				
-				$(s.startBlock).before(block)
-				range.setEnd(node, s.start) //recallibrate range to include new block
+				range.setEnd(container.children[0], 0)
+				range.collapse(false) //send caret to end of range
+				sel.removeAllRanges()//?
+				sel.addRange(range) //select the range					
 			}
-			else if (atEndOfBlock) {
-				block.innerHTML = documentFragment
-				
-				$(blockEl).after(block)
-				range.setEnd(blockEl.nextSibling, 0)
-			}
-			else { // pressed enter somewhere in the middle of block text
-				var newRange, content
+		}
 
-				newRange = { endNode : lastNode,
-							 end 	 : lastNode.length }
-
-				content = selection.cutSelection(newRange)
-
-				block = content.blocks[0]
-				
-				$(blockEl).after(block)
-				range.setEnd(blockEl.nextSibling, 0)
-			}
-
-			range.collapse(false) //send caret to end of range
-			s.removeAllRanges()
-			s.addRange(range) //select the range				
-		}		
-
-	}
+	}	
 })
-
-	CORE.register('body:editor:view/keys/delete/preventBlankDocument', function(sb) {
-
-		return {
-			init : function() {
-				sb.listen('(body:editor)view/keys/delete/blank', this.checkIsBlankDocument)
-			},
-			destroy: function() {
-				sb.ignore('(body:editor)view/keys/delete')
-			},
-			checkIsBlankDocument : function (evt) {
-				var sel 	= window.getSelection(),
-					range 	= document.createRange(),
-					cursorNode 	= sel.baseNode,
-					container 	= $('#content')[0]
-
-				if (cursorNode == container) {
-					var	block 			 = document.createElement('block'),
-						documentFragment = "<br>";
-					block.innerHTML 	 = documentFragment
-
-					$(container).append(block)
-					
-					range.setEnd(container.children[0], 0)
-					range.collapse(false) //send caret to end of range
-					sel.removeAllRanges()//?
-					sel.addRange(range) //select the range					
-				}
-			}
-
-		}	
-	})
